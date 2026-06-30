@@ -6,8 +6,8 @@
  * Version:     1.1.0
  * Author:      just another tech
  * Author URI:  https://justanothertech.online
- * License:     GPL-3.0-or-later
- * License URI: https://www.gnu.org/licenses/gpl-3.0.html
+ * License:     GPL-2.0
+ * License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Text Domain: brizy-fix
  */
 

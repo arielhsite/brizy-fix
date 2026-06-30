@@ -43,4 +43,4 @@ This plugin is intended as a one-time repair utility. After the recompilation fi
 
 ## License
 
-GPL-3.0-or-later
+GPL-2.0
