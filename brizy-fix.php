@@ -3,7 +3,7 @@
  * Plugin Name: Brizy Fix
  * Plugin URI:  https://justanothertech.online
  * Description: Recompiles all Brizy-enabled pages to fix broken layouts. Runs page-by-page using AJAX to prevent memory exhaustion and timeouts.
- * Version:     1.2.0
+ * Version:     1.3.0
  * Author:      just another tech
  * Author URI:  https://justanothertech.online
  * License:     GPL2
@@ -262,12 +262,23 @@ class Brizy_Fix {
 		$posts_data = array();
 		foreach ( $post_ids as $id ) {
 			$title = get_the_title( $id );
-			if ( empty( $title ) ) {
-				$title = esc_html__( '(no title)', 'brizy-fix' );
+			
+			// Check if title is a 32-character hexadecimal string or empty.
+			if ( preg_match( '/^[a-f0-9]{32}$/i', $title ) || empty( $title ) ) {
+				$post_type = get_post_type( $id );
+				if ( 'brizy-global-block' === $post_type ) {
+					$title = esc_html__( 'Global Block', 'brizy-fix' );
+				} elseif ( 'brizy-saved-block' === $post_type ) {
+					$title = esc_html__( 'Saved section', 'brizy-fix' );
+				} else {
+					$title = esc_html__( 'Other internal custom post type', 'brizy-fix' );
+				}
+			} else {
+				if ( mb_strlen( $title ) > 40 ) {
+					$title = mb_substr( $title, 0, 40 ) . '...';
+				}
 			}
-			if ( mb_strlen( $title ) > 40 ) {
-				$title = mb_substr( $title, 0, 40 ) . '...';
-			}
+
 			$posts_data[] = array(
 				'id'    => intval( $id ),
 				'title' => $title,
