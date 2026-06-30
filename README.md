@@ -1,4 +1,4 @@
-# Brizy Fix
+# Layout Recompiler for Brizy
 
 A lightweight, performance-optimized utility plugin for WordPress to fix broken page layouts and styling mismatches caused by **Brizy Builder** cache/compilation sync issues.
 
@@ -6,7 +6,7 @@ A lightweight, performance-optimized utility plugin for WordPress to fix broken 
 
 If your website layout looks broken after a WordPress migration, host transfer, or plugin update, the cause is often that Brizy's compiled HTML/CSS caches have fallen out of sync. 
 
-**Brizy Fix** solves this by triggering a clean recompilation of all pages built using Brizy.
+**Layout Recompiler for Brizy** solves this by triggering a clean recompilation of all pages built using Brizy.
 
 ### Key Features
 * **AJAX-Based Execution**: Runs incrementally, compiling one page at a time. This keeps memory usage low and prevents common "500 Internal Server Error" or execution timeouts on low-memory servers (below 256MB).
@@ -37,18 +37,28 @@ This plugin is designed **only** to resolve compiled HTML/CSS mismatch glitches 
 
 ## Installation & Usage
 
-1. Upload the `brizy-fix` folder to your `/wp-content/plugins/` directory.
-2. Activate **Brizy Fix** from your WordPress Plugins menu.
+1. Upload the `layout-recompiler-for-brizy` folder to your `/wp-content/plugins/` directory.
+2. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
 3. Navigate to **Tools > Brizy Fix** in your WordPress Admin Sidebar.
 4. Click **Start Recompilation** and let the queue progress to 100%.
 
-[![Download Brizy Fix](https://img.shields.io/badge/Download_Brizy_Fix-2271b1?style=for-the-badge&logo=github&logoColor=white)](https://github.com/arielhsite/brizy-fix/archive/refs/heads/main.zip)
+[![Download Layout Recompiler for Brizy](https://img.shields.io/badge/Download_Layout_Recompiler_for_Brizy-2271b1?style=for-the-badge&logo=github&logoColor=white)](https://github.com/arielhsite/layout-recompiler-for-brizy/archive/refs/heads/main.zip)
+
+---
+
+## FAQ
+
+### Is it safe to use?
+Yes. It only updates the output caches and HTML wrappers, without deleting or altering your design JSON templates or content. However, we always recommend making a backup first.
+
+### What should I do after compiling?
+Once the recompilation process is complete and you have verified that your layouts are fixed, you can safely deactivate and delete the plugin. It does not need to run continuously.
 
 ---
 
 ## After Use
 
-Once the recompilation process is complete and you have verified that your website layouts are restored, you can safely **deactivate and delete** the Brizy Fix plugin. It does not need to remain active on your site and will not affect the compiled pages after deletion.
+Once the recompilation process is complete and you have verified that your website layouts are restored, you can safely **deactivate and delete** the Layout Recompiler for Brizy plugin. It does not need to remain active on your site and will not affect the compiled pages after deletion.
 
 ## License
 
