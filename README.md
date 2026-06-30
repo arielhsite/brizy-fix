@@ -43,3 +43,13 @@ This plugin is designed **only** to resolve compiled HTML/CSS mismatch glitches 
 4. Click **Start Recompilation** and let the queue progress to 100%.
 
 [![Download Brizy Fix](https://img.shields.io/badge/Download_Brizy_Fix-2271b1?style=for-the-badge&logo=github&logoColor=white)](https://github.com/arielhsite/brizy-fix/archive/refs/heads/main.zip)
+
+---
+
+## After Use
+
+Once the recompilation process is complete and you have verified that your website layouts are restored, you can safely **deactivate and delete** the Brizy Fix plugin. It does not need to remain active on your site and will not affect the compiled pages after deletion.
+
+## License
+
+This project is licensed under the GPLv2 or later License.
