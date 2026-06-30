@@ -3,11 +3,10 @@
  * Plugin Name: Brizy Fix
  * Plugin URI:  https://justanothertech.online
  * Description: Recompiles all Brizy-enabled pages to fix broken layouts. Runs page-by-page using AJAX to prevent memory exhaustion and timeouts.
- * Version:     1.1.0
+ * Version:     1.1.1
  * Author:      just another tech
  * Author URI:  https://justanothertech.online
- * License:     GPL-2.0
- * License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * License:     GPL2
  * Text Domain: brizy-fix
  */
 
@@ -90,6 +89,19 @@ class Brizy_Fix {
 	 */
 	public function render_admin_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		// Validation: Check if Brizy Builder is active.
+		if ( ! class_exists( 'Brizy_Editor_Post' ) ) {
+			?>
+			<div class="wrap">
+				<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+				<div class="notice notice-error">
+					<p><?php esc_html_e( 'Brizy Builder is not installed or active. Please install and activate Brizy Builder to use this utility.', 'brizy-fix' ); ?></p>
+				</div>
+			</div>
+			<?php
 			return;
 		}
 		?>
