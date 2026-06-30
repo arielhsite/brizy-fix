@@ -82,6 +82,28 @@ class Brizy_Fix {
 			.brizy-fix-log-item.success { color: green; }
 			.brizy-fix-log-item.error { color: red; }
 		' );
+
+		// Enqueue the external JS file and localize data.
+		wp_enqueue_script( 'brizy-fix-admin', plugins_url( 'js/admin.js', __FILE__ ), array( 'jquery' ), '1.3.0', true );
+		wp_localize_script( 'brizy-fix-admin', 'brizyFixData', array(
+			'ajaxurl'  => admin_url( 'admin-ajax.php' ),
+			'nonce'    => wp_create_nonce( 'brizy_fix_nonce' ),
+			'messages' => array(
+				'processing' => esc_html__( 'Processing...', 'brizy-fix' ),
+				'fetching'   => esc_html__( 'Fetching pages list...', 'brizy-fix' ),
+				'noPages'    => esc_html__( 'No Brizy-enabled pages found or security check failed.', 'brizy-fix' ),
+				'failedList' => esc_html__( 'Failed to retrieve pages list.', 'brizy-fix' ),
+				'complete'   => esc_html__( 'Recompilation Complete!', 'brizy-fix' ),
+				'finished'   => esc_html__( 'Finished recompiling all posts.', 'brizy-fix' ),
+				'compiling'  => esc_html__( 'Compiling ', 'brizy-fix' ),
+				'compiled'   => esc_html__( ' compiled successfully.', 'brizy-fix' ),
+				'failed'     => esc_html__( ' failed: ', 'brizy-fix' ),
+				'reqFailed'  => esc_html__( ' request failed.', 'brizy-fix' ),
+				'successful' => esc_html__( 'successful', 'brizy-fix' ),
+				'failedSkipped' => esc_html__( 'failed/skipped', 'brizy-fix' ),
+				'start'      => esc_html__( 'Start Recompilation', 'brizy-fix' )
+			)
+		) );
 	}
 
 	/**
@@ -129,114 +151,6 @@ class Brizy_Fix {
 				<div class="brizy-fix-log" id="brizy-fix-log"></div>
 			</div>
 		</div>
-
-		<script>
-		jQuery(document).ready(function($) {
-			var posts = [];
-			var currentIndex = 0;
-			var compiledCount = 0;
-			var failedCount = 0;
-
-			$('#brizy-fix-start-btn').on('click', function(e) {
-				e.preventDefault();
-				
-				// Disable button.
-				$(this).prop('disabled', true).text('<?php esc_html_e( 'Processing...', 'brizy-fix' ); ?>');
-				
-				// Show progress section and clear log.
-				$('#brizy-fix-progress-section').show();
-				$('#brizy-fix-log').empty();
-				$('#brizy-fix-progress-title').text('<?php esc_html_e( 'Fetching pages list...', 'brizy-fix' ); ?>');
-				
-				// Step 1: Get posts.
-				$.ajax({
-					url: ajaxurl,
-					type: 'POST',
-					data: {
-						action: 'brizy_fix_get_posts',
-						security: '<?php echo esc_js( wp_create_nonce( "brizy_fix_nonce" ) ); ?>'
-					},
-					success: function(response) {
-						if (response.success && response.data && response.data.length > 0) {
-							posts = response.data;
-							currentIndex = 0;
-							compiledCount = 0;
-							failedCount = 0;
-							updateProgress();
-							compileNext();
-						} else {
-							logMessage('<?php esc_html_e( 'No Brizy-enabled pages found or security check failed.', 'brizy-fix' ); ?>', 'error');
-							resetBtn();
-						}
-					},
-					error: function() {
-						logMessage('<?php esc_html_e( 'Failed to retrieve pages list.', 'brizy-fix' ); ?>', 'error');
-						resetBtn();
-					}
-				});
-			});
-
-			function compileNext() {
-				if (currentIndex >= posts.length) {
-					// Done!
-					$('#brizy-fix-progress-title').text('<?php esc_html_e( 'Recompilation Complete!', 'brizy-fix' ); ?>');
-					logMessage('<?php esc_html_e( 'Finished recompiling all posts.', 'brizy-fix' ); ?>', 'success');
-					resetBtn();
-					return;
-				}
-
-				var post = posts[currentIndex];
-				$('#brizy-fix-progress-title').text('<?php esc_html_e( 'Compiling ', 'brizy-fix' ); ?>' + '"' + post.title + '" (ID: ' + post.id + ')...');
-
-				$.ajax({
-					url: ajaxurl,
-					type: 'POST',
-					data: {
-						action: 'brizy_fix_compile_post',
-						post_id: post.id,
-						security: '<?php echo esc_js( wp_create_nonce( "brizy_fix_nonce" ) ); ?>'
-					},
-					success: function(response) {
-						if (response.success && response.data && response.data.success) {
-							compiledCount++;
-							logMessage('<?php esc_html_e( 'Page ', 'brizy-fix' ); ?>' + '"' + post.title + '" (ID: ' + post.id + ')<?php esc_html_e( ' compiled successfully.', 'brizy-fix' ); ?>', 'success');
-						} else {
-							failedCount++;
-							var errMsg = (response.data && response.data.error) ? response.data.error : '<?php esc_html_e( 'unknown error', 'brizy-fix' ); ?>';
-							logMessage('<?php esc_html_e( 'Page ', 'brizy-fix' ); ?>' + '"' + post.title + '" (ID: ' + post.id + ')<?php esc_html_e( ' failed: ', 'brizy-fix' ); ?>' + errMsg, 'error');
-						}
-						currentIndex++;
-						updateProgress();
-						compileNext();
-					},
-					error: function() {
-						failedCount++;
-						logMessage('<?php esc_html_e( 'Page ', 'brizy-fix' ); ?>' + '"' + post.title + '" (ID: ' + post.id + ')<?php esc_html_e( ' request failed.', 'brizy-fix' ); ?>', 'error');
-						currentIndex++;
-						updateProgress();
-						compileNext();
-					}
-				});
-			}
-
-			function updateProgress() {
-				var percent = (currentIndex / posts.length) * 100;
-				$('#brizy-fix-progress-bar').css('width', percent + '%');
-				$('#brizy-fix-progress-text').text(currentIndex + ' / ' + posts.length + ' (' + compiledCount + ' <?php esc_html_e( 'successful', 'brizy-fix' ); ?>, ' + failedCount + ' <?php esc_html_e( 'failed/skipped', 'brizy-fix' ); ?>)');
-			}
-
-			function logMessage(msg, type) {
-				var item = $('<div class="brizy-fix-log-item"></div>').text(msg).addClass(type);
-				var log = $('#brizy-fix-log');
-				log.append(item);
-				log.scrollTop(log[0].scrollHeight);
-			}
-
-			function resetBtn() {
-				$('#brizy-fix-start-btn').prop('disabled', false).text('<?php esc_html_e( 'Start Recompilation', 'brizy-fix' ); ?>');
-			}
-		});
-		</script>
 		<?php
 	}
 
