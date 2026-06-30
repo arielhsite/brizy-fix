@@ -6,7 +6,7 @@
  * Author:      just another tech
  * Author URI:  https://justanothertech.online
  * License:     GPL2
- * Text Domain: brizy-fix
+ * Text Domain: layout-recompiler-for-brizy
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -30,8 +30,8 @@ class Brizy_Fix {
 	 */
 	public function add_admin_menu() {
 		add_management_page(
-			esc_html__( 'Layout Recompiler for Brizy', 'brizy-fix' ),
-			esc_html__( 'Layout Recompiler', 'brizy-fix' ),
+			esc_html__( 'Layout Recompiler for Brizy', 'layout-recompiler-for-brizy' ),
+			esc_html__( 'Layout Recompiler', 'layout-recompiler-for-brizy' ),
 			'manage_options',
 			'brizy-fix',
 			array( $this, 'render_admin_page' )
@@ -88,19 +88,19 @@ class Brizy_Fix {
 			'ajaxurl'  => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'brizy_fix_nonce' ),
 			'messages' => array(
-				'processing' => esc_html__( 'Processing...', 'brizy-fix' ),
-				'fetching'   => esc_html__( 'Fetching pages list...', 'brizy-fix' ),
-				'noPages'    => esc_html__( 'No Brizy-enabled pages found or security check failed.', 'brizy-fix' ),
-				'failedList' => esc_html__( 'Failed to retrieve pages list.', 'brizy-fix' ),
-				'complete'   => esc_html__( 'Recompilation Complete!', 'brizy-fix' ),
-				'finished'   => esc_html__( 'Finished recompiling all posts.', 'brizy-fix' ),
-				'compiling'  => esc_html__( 'Compiling ', 'brizy-fix' ),
-				'compiled'   => esc_html__( ' compiled successfully.', 'brizy-fix' ),
-				'failed'     => esc_html__( ' failed: ', 'brizy-fix' ),
-				'reqFailed'  => esc_html__( ' request failed.', 'brizy-fix' ),
-				'successful' => esc_html__( 'successful', 'brizy-fix' ),
-				'failedSkipped' => esc_html__( 'failed/skipped', 'brizy-fix' ),
-				'start'      => esc_html__( 'Start Recompilation', 'brizy-fix' )
+				'processing' => esc_html__( 'Processing...', 'layout-recompiler-for-brizy' ),
+				'fetching'   => esc_html__( 'Fetching pages list...', 'layout-recompiler-for-brizy' ),
+				'noPages'    => esc_html__( 'No Brizy-enabled pages found or security check failed.', 'layout-recompiler-for-brizy' ),
+				'failedList' => esc_html__( 'Failed to retrieve pages list.', 'layout-recompiler-for-brizy' ),
+				'complete'   => esc_html__( 'Recompilation Complete!', 'layout-recompiler-for-brizy' ),
+				'finished'   => esc_html__( 'Finished recompiling all posts.', 'layout-recompiler-for-brizy' ),
+				'compiling'  => esc_html__( 'Compiling ', 'layout-recompiler-for-brizy' ),
+				'compiled'   => esc_html__( ' compiled successfully.', 'layout-recompiler-for-brizy' ),
+				'failed'     => esc_html__( ' failed: ', 'layout-recompiler-for-brizy' ),
+				'reqFailed'  => esc_html__( ' request failed.', 'layout-recompiler-for-brizy' ),
+				'successful' => esc_html__( 'successful', 'layout-recompiler-for-brizy' ),
+				'failedSkipped' => esc_html__( 'failed/skipped', 'layout-recompiler-for-brizy' ),
+				'start'      => esc_html__( 'Start Recompilation', 'layout-recompiler-for-brizy' )
 			)
 		) );
 	}
@@ -119,7 +119,7 @@ class Brizy_Fix {
 			<div class="wrap">
 				<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 				<div class="notice notice-error">
-					<p><?php esc_html_e( 'Brizy Builder is not installed or active. Please install and activate Brizy Builder to use this utility.', 'brizy-fix' ); ?></p>
+					<p><?php esc_html_e( 'Brizy Builder is not installed or active. Please install and activate Brizy Builder to use this utility.', 'layout-recompiler-for-brizy' ); ?></p>
 				</div>
 			</div>
 			<?php
@@ -128,25 +128,25 @@ class Brizy_Fix {
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<p><?php esc_html_e( 'Force recompilation of all Brizy-enabled pages and posts to fix broken layouts. This utility runs incrementally to prevent timeouts and PHP memory limit issues.', 'brizy-fix' ); ?></p>
+			<p><?php esc_html_e( 'Force recompilation of all Brizy-enabled pages and posts to fix broken layouts. This utility runs incrementally to prevent timeouts and PHP memory limit issues.', 'layout-recompiler-for-brizy' ); ?></p>
 			
 			<div class="card" style="max-width: 600px; margin-top: 20px;">
-				<h2><?php esc_html_e( 'Run Recompilation', 'brizy-fix' ); ?></h2>
-				<p><?php esc_html_e( 'Click the button below to start the page-by-page recompilation process.', 'brizy-fix' ); ?></p>
+				<h2><?php esc_html_e( 'Run Recompilation', 'layout-recompiler-for-brizy' ); ?></h2>
+				<p><?php esc_html_e( 'Click the button below to start the page-by-page recompilation process.', 'layout-recompiler-for-brizy' ); ?></p>
 				
 				<button id="brizy-fix-start-btn" class="button button-primary">
-					<?php esc_html_e( 'Start Recompilation', 'brizy-fix' ); ?>
+					<?php esc_html_e( 'Start Recompilation', 'layout-recompiler-for-brizy' ); ?>
 				</button>
 			</div>
 
 			<div class="brizy-fix-progress-container" id="brizy-fix-progress-section">
-				<h3 id="brizy-fix-progress-title"><?php esc_html_e( 'Initializing...', 'brizy-fix' ); ?></h3>
+				<h3 id="brizy-fix-progress-title"><?php esc_html_e( 'Initializing...', 'layout-recompiler-for-brizy' ); ?></h3>
 				<div class="brizy-fix-progress-bar-wrapper">
 					<div class="brizy-fix-progress-bar" id="brizy-fix-progress-bar"></div>
 				</div>
 				<p id="brizy-fix-progress-text">0 / 0</p>
 
-				<h4><?php esc_html_e( 'Process Log', 'brizy-fix' ); ?></h4>
+				<h4><?php esc_html_e( 'Process Log', 'layout-recompiler-for-brizy' ); ?></h4>
 				<div class="brizy-fix-log" id="brizy-fix-log"></div>
 			</div>
 		</div>
@@ -180,11 +180,11 @@ class Brizy_Fix {
 			if ( preg_match( '/^[a-f0-9]{32}$/i', $title ) || empty( $title ) ) {
 				$post_type = get_post_type( $id );
 				if ( 'brizy-global-block' === $post_type ) {
-					$title = esc_html__( 'Global Block', 'brizy-fix' );
+					$title = esc_html__( 'Global Block', 'layout-recompiler-for-brizy' );
 				} elseif ( 'brizy-saved-block' === $post_type ) {
-					$title = esc_html__( 'Saved section', 'brizy-fix' );
+					$title = esc_html__( 'Saved section', 'layout-recompiler-for-brizy' );
 				} else {
-					$title = esc_html__( 'Other internal custom post type', 'brizy-fix' );
+					$title = esc_html__( 'Other internal custom post type', 'layout-recompiler-for-brizy' );
 				}
 			} else {
 				if ( mb_strlen( $title ) > 40 ) {
