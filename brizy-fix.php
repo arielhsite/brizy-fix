@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Brizy Fix
+ * Plugin Name: Layout Recompiler for Brizy
  * Plugin URI:  https://justanothertech.online
  * Description: Recompiles all Brizy-enabled pages to fix broken layouts. Runs page-by-page using AJAX to prevent memory exhaustion and timeouts.
  * Version:     1.3.0
@@ -31,8 +31,8 @@ class Brizy_Fix {
 	 */
 	public function add_admin_menu() {
 		add_management_page(
-			esc_html__( 'Brizy Fix', 'brizy-fix' ),
-			esc_html__( 'Brizy Fix', 'brizy-fix' ),
+			esc_html__( 'Layout Recompiler for Brizy', 'brizy-fix' ),
+			esc_html__( 'Layout Recompiler', 'brizy-fix' ),
 			'manage_options',
 			'brizy-fix',
 			array( $this, 'render_admin_page' )

@@ -1,4 +1,4 @@
-=== Brizy Fix ===
+=== Layout Recompiler for Brizy ===
 Contributors: arielhsite
 Donate link: https://justanothertech.online
 Tags: brizy, builder, layout, fix, recompile
@@ -14,7 +14,7 @@ Recompiles all Brizy Builder pages to fix broken styling, caching, and layout mi
 
 If your website layout looks broken after a WordPress migration, host transfer, or plugin update, the cause is often that Brizy's compiled HTML/CSS caches have fallen out of sync. 
 
-**Brizy Fix** solves this by triggering a clean recompilation of all pages built using Brizy.
+**Layout Recompiler for Brizy** solves this by triggering a clean recompilation of all pages built using Brizy.
 
 === Key Features ===
 * **AJAX-Based Execution**: Runs incrementally, compiling one page at a time. This keeps memory usage low and prevents common "500 Internal Server Error" or execution timeouts on low-memory servers (below 256MB).
@@ -30,7 +30,7 @@ This plugin is designed **only** to resolve compiled HTML/CSS mismatch glitches 
 == Installation ==
 
 1. Upload the `brizy-fix` folder to your `/wp-content/plugins/` directory.
-2. Activate **Brizy Fix** from your WordPress Plugins menu.
+2. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
 3. Navigate to **Tools > Brizy Fix** in your WordPress Admin Sidebar.
 4. Click **Start Recompilation** and let the queue progress to 100%.
 
