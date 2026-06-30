@@ -37,6 +37,10 @@ This plugin is designed **only** to resolve compiled HTML/CSS mismatch glitches 
 3. Navigate to **Tools > Brizy Fix** in your WordPress Admin Sidebar.
 4. Click **Start Recompilation** and let the queue progress to 100%.
 
+## After Use
+
+This plugin is intended as a one-time repair utility. After the recompilation finishes and you have confirmed your Brizy pages are displaying correctly, deactivate and delete **Brizy Fix** from your WordPress site. There is no need to keep it installed after use.
+
 ## License
 
 GPL-3.0-or-later
