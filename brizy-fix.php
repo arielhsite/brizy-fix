@@ -3,11 +3,10 @@
  * Plugin Name: Brizy Fix
  * Plugin URI:  https://justanothertech.online
  * Description: Recompiles all Brizy-enabled pages to fix broken layouts. Runs page-by-page using AJAX to prevent memory exhaustion and timeouts.
- * Version:     1.1.1
+ * Version:     1.2.0
  * Author:      just another tech
  * Author URI:  https://justanothertech.online
- * License:     GPL-2.0
- * License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * License:     GPL2
  * Text Domain: brizy-fix
  */
 
@@ -133,7 +132,7 @@ class Brizy_Fix {
 
 		<script>
 		jQuery(document).ready(function($) {
-			var postIds = [];
+			var posts = [];
 			var currentIndex = 0;
 			var compiledCount = 0;
 			var failedCount = 0;
@@ -159,7 +158,7 @@ class Brizy_Fix {
 					},
 					success: function(response) {
 						if (response.success && response.data && response.data.length > 0) {
-							postIds = response.data;
+							posts = response.data;
 							currentIndex = 0;
 							compiledCount = 0;
 							failedCount = 0;
@@ -178,7 +177,7 @@ class Brizy_Fix {
 			});
 
 			function compileNext() {
-				if (currentIndex >= postIds.length) {
+				if (currentIndex >= posts.length) {
 					// Done!
 					$('#brizy-fix-progress-title').text('<?php esc_html_e( 'Recompilation Complete!', 'brizy-fix' ); ?>');
 					logMessage('<?php esc_html_e( 'Finished recompiling all posts.', 'brizy-fix' ); ?>', 'success');
@@ -186,25 +185,25 @@ class Brizy_Fix {
 					return;
 				}
 
-				var postId = postIds[currentIndex];
-				$('#brizy-fix-progress-title').text('<?php esc_html_e( 'Compiling page ID ', 'brizy-fix' ); ?>' + postId + '...');
+				var post = posts[currentIndex];
+				$('#brizy-fix-progress-title').text('<?php esc_html_e( 'Compiling ', 'brizy-fix' ); ?>' + '"' + post.title + '" (ID: ' + post.id + ')...');
 
 				$.ajax({
 					url: ajaxurl,
 					type: 'POST',
 					data: {
 						action: 'brizy_fix_compile_post',
-						post_id: postId,
+						post_id: post.id,
 						security: '<?php echo esc_js( wp_create_nonce( "brizy_fix_nonce" ) ); ?>'
 					},
 					success: function(response) {
 						if (response.success && response.data && response.data.success) {
 							compiledCount++;
-							logMessage('<?php esc_html_e( 'Page ID ', 'brizy-fix' ); ?>' + postId + '<?php esc_html_e( ' compiled successfully.', 'brizy-fix' ); ?>', 'success');
+							logMessage('<?php esc_html_e( 'Page ', 'brizy-fix' ); ?>' + '"' + post.title + '" (ID: ' + post.id + ')<?php esc_html_e( ' compiled successfully.', 'brizy-fix' ); ?>', 'success');
 						} else {
 							failedCount++;
 							var errMsg = (response.data && response.data.error) ? response.data.error : '<?php esc_html_e( 'unknown error', 'brizy-fix' ); ?>';
-							logMessage('<?php esc_html_e( 'Page ID ', 'brizy-fix' ); ?>' + postId + '<?php esc_html_e( ' failed: ', 'brizy-fix' ); ?>' + errMsg, 'error');
+							logMessage('<?php esc_html_e( 'Page ', 'brizy-fix' ); ?>' + '"' + post.title + '" (ID: ' + post.id + ')<?php esc_html_e( ' failed: ', 'brizy-fix' ); ?>' + errMsg, 'error');
 						}
 						currentIndex++;
 						updateProgress();
@@ -212,7 +211,7 @@ class Brizy_Fix {
 					},
 					error: function() {
 						failedCount++;
-						logMessage('<?php esc_html_e( 'Page ID ', 'brizy-fix' ); ?>' + postId + '<?php esc_html_e( ' request failed.', 'brizy-fix' ); ?>', 'error');
+						logMessage('<?php esc_html_e( 'Page ', 'brizy-fix' ); ?>' + '"' + post.title + '" (ID: ' + post.id + ')<?php esc_html_e( ' request failed.', 'brizy-fix' ); ?>', 'error');
 						currentIndex++;
 						updateProgress();
 						compileNext();
@@ -221,9 +220,9 @@ class Brizy_Fix {
 			}
 
 			function updateProgress() {
-				var percent = (currentIndex / postIds.length) * 100;
+				var percent = (currentIndex / posts.length) * 100;
 				$('#brizy-fix-progress-bar').css('width', percent + '%');
-				$('#brizy-fix-progress-text').text(currentIndex + ' / ' + postIds.length + ' (' + compiledCount + ' <?php esc_html_e( 'successful', 'brizy-fix' ); ?>, ' + failedCount + ' <?php esc_html_e( 'failed/skipped', 'brizy-fix' ); ?>)');
+				$('#brizy-fix-progress-text').text(currentIndex + ' / ' + posts.length + ' (' + compiledCount + ' <?php esc_html_e( 'successful', 'brizy-fix' ); ?>, ' + failedCount + ' <?php esc_html_e( 'failed/skipped', 'brizy-fix' ); ?>)');
 			}
 
 			function logMessage(msg, type) {
@@ -260,7 +259,22 @@ class Brizy_Fix {
 			$post_ids = array();
 		}
 
-		wp_send_json_success( $post_ids );
+		$posts_data = array();
+		foreach ( $post_ids as $id ) {
+			$title = get_the_title( $id );
+			if ( empty( $title ) ) {
+				$title = esc_html__( '(no title)', 'brizy-fix' );
+			}
+			if ( mb_strlen( $title ) > 40 ) {
+				$title = mb_substr( $title, 0, 40 ) . '...';
+			}
+			$posts_data[] = array(
+				'id'    => intval( $id ),
+				'title' => $title,
+			);
+		}
+
+		wp_send_json_success( $posts_data );
 	}
 
 	/**
