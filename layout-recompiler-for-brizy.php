@@ -1,7 +1,6 @@
 <?php
 /**
  * Plugin Name: Layout Recompiler for Brizy
- * Plugin URI:  https://justanothertech.online
  * Description: Recompiles all Brizy-enabled pages to fix broken layouts. Runs page-by-page using AJAX to prevent memory exhaustion and timeouts.
  * Version:     1.3.0
  * Author:      just another tech
