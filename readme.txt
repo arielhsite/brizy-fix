@@ -1,5 +1,5 @@
 === Layout Recompiler for Brizy ===
-Contributors: arielhsite
+Contributors: arielhsite, ahabawel
 Donate link: https://justanothertech.online
 Tags: brizy, builder, layout, fix, recompile
 Requires at least: 5.0
