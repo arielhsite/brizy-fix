@@ -48,12 +48,11 @@ This plugin is designed **only** to resolve compiled HTML/CSS mismatch glitches 
 
 ## Installation & Usage
 
-1. Upload the `layout-recompiler-for-brizy` folder to your `/wp-content/plugins/` directory.
-2. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
-3. Navigate to **Tools > Layout Recompiler** in your WordPress Admin Sidebar.
-4. Click **Start Recompilation** and let the queue progress to 100%.
-
-**[<u>Download Layout Recompiler for Brizy</u>](https://github.com/arielhsite/brizy-fix/archive/refs/heads/main.zip)**
+1. **[<u>Download Layout Recompiler for Brizy</u>](https://github.com/arielhsite/brizy-fix/archive/refs/heads/main.zip)** zip archive.
+2. Upload the `layout-recompiler-for-brizy` folder to your `/wp-content/plugins/` directory.
+3. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
+4. Navigate to **Tools > Layout Recompiler** in your WordPress Admin Sidebar.
+5. Click **Start Recompilation** and let the queue progress to 100%.
 
 ---
 
