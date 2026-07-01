@@ -1,5 +1,16 @@
 # Layout Recompiler for Brizy
 
+<table border="0" cellpadding="15" cellspacing="0" align="center">
+  <tr>
+    <td valign="top" width="45%">
+      <img src="./assets/screenshot-1.jpg" alt="Layout Recompiler Sidebar Menu" width="100%" />
+    </td>
+    <td valign="top" width="55%">
+      <img src="./assets/screenshot-2.jpg" alt="Recompilation Interface" width="100%" />
+    </td>
+  </tr>
+</table>
+
 A lightweight, performance-optimized utility plugin for WordPress to fix broken page layouts and styling mismatches caused by **Brizy Builder** cache/compilation sync issues.
 
 ## Description
