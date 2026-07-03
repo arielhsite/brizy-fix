@@ -21,11 +21,17 @@ If your website layout looks broken after a WordPress migration, host transfer, 
 * **Safe Re-generation**: The plugin reads your design templates in a read-only fashion (using JSON layouts stored in the database) and only updates the output HTML wrappers. Your database files and design structures are completely safe.
 * **Real-time Logging**: Displays a detailed progress bar and status feed in your admin area to show successful compilations or skipped layout assets.
 
-=== 🚫 What This Plugin Does NOT Fix (Blocksy Companion Issue) ===
-This plugin is designed **only** to resolve compiled HTML/CSS mismatch glitches in the Brizy Builder. 
-* It does not resolve layout width issues caused by Blocksy Companion.
-* If your site is experiencing an issue where full-width pages have collapsed to default container width, this is a known conflict within the Blocksy Companion plugin stylesheet settings. That is an entirely separate issue.
-* Test screencast of compilation and layout test: https://youtu.be/8ra4pF9fMIQ
+=== Resolving Collapsed Page Widths (Blocksy Companion Conflict) ===
+
+The Layout Recompiler can fix instances where full-width pages have suddenly collapsed to the default container width. If you are experiencing this layout issue due to a conflict with Blocksy Companion, follow these steps:
+
+1. **Deactivate Blocksy Companion Premium** temporarily.
+2. Run the **Layout Recompiler** queue to completion (100%).
+
+*Recommendations for Complex Sites*
+For highly complex websites, we recommend temporarily disabling non-essential third-party plugins before running the recompilation process to ensure a clean execution. However:
+* **WooCommerce Sites**: If your website uses dynamic templates to generate shop pages, cart/checkout areas, or product queries, **WooCommerce** and its essential related add-ons *must* remain active.
+* **Dynamic Fields (ACF)**: Similarly, if your layouts rely heavily on **Advanced Custom Fields (ACF)** or other dynamic content engines to fetch database fields, those plugins *must* remain enabled during recompilation.
 
 == Installation ==
 
@@ -33,6 +39,8 @@ This plugin is designed **only** to resolve compiled HTML/CSS mismatch glitches 
 2. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
 3. Navigate to **Tools > Layout Recompiler** in your WordPress Admin Sidebar.
 4. Click **Start Recompilation** and let the queue progress to 100%.
+
+You can watch the screencast here: https://youtu.be/aOkBbAWAcWI
 
 == Frequently Asked Questions ==
 
