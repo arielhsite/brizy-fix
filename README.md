@@ -41,6 +41,7 @@ The Layout Recompiler can fix instances where full-width pages have suddenly col
 
 1. **Deactivate Blocksy Companion Premium** temporarily.
 2. Run the **Layout Recompiler** queue to completion (100%).
+3. Once finished, reactivate **Blocksy Companion Premium** and check the front-end of your site to see if the issue is resolved.
 
 ### Recommendations for Complex Sites
 For highly complex websites, we recommend temporarily disabling non-essential third-party plugins before running the recompilation process to ensure a clean execution. However:
