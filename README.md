@@ -19,10 +19,22 @@ If your website layout looks broken after a WordPress migration, host transfer, 
 
 **Layout Recompiler for Brizy** solves this by triggering a clean recompilation of all pages built using Brizy.
 
+This plugin does not include license checks, trials, paid feature locks, usage quotas, or unlockable local features.
+
 ### Key Features
 * **AJAX-Based Execution**: Runs incrementally, compiling one page at a time. This keeps memory usage low and prevents common "500 Internal Server Error" or execution timeouts on low-memory servers (below 256MB).
 * **Safe Re-generation**: The plugin reads your design templates in a read-only fashion (using JSON layouts stored in the database) and only updates the output HTML wrappers. Your database files and design structures are completely safe.
 * **Real-time Logging**: Displays a detailed progress bar and status feed in your admin area to show successful compilations or skipped layout assets.
+
+## Brizy Builder Dependency and Service Disclosure
+
+This plugin requires the Brizy Builder plugin to be installed and active. It does not send data to any external service directly and does not make its own remote API requests.
+
+When you run the recompilation tool, this plugin calls Brizy Builder's local WordPress classes to recompile Brizy-enabled pages. Brizy Builder may use its own compiler URLs or download URLs as part of its normal compilation process. Any data handling, remote requests, terms, and privacy details for that process are controlled by Brizy Builder.
+
+Brizy Builder terms: https://www.brizy.io/terms
+
+Brizy Builder privacy policy: https://www.brizy.io/privacy-policy
 
 ---
 
@@ -52,7 +64,7 @@ For highly complex websites, we recommend temporarily disabling non-essential th
 
 ## Installation & Usage
 
-1. **[<u>Download Layout Recompiler for Brizy</u>](https://github.com/arielhsite/brizy-fix/archive/refs/heads/main.zip)** zip archive.
+1. Download the plugin zip archive.
 2. Upload the `layout-recompiler-for-brizy` folder to your `/wp-content/plugins/` directory.
 3. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
 4. Navigate to **Tools > Layout Recompiler** in your WordPress Admin Sidebar.

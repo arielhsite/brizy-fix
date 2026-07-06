@@ -6,6 +6,8 @@
  * Author:      just another tech
  * Author URI:  https://justanothertech.online
  * License:     GPL2
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Requires Plugins: brizy
  * Text Domain: layout-recompiler-for-brizy
  */
 
@@ -160,11 +162,11 @@ class Brizy_Fix {
 		check_ajax_referer( 'brizy_fix_nonce', 'security' );
 		
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( 'Permission denied' );
+			wp_send_json_error( esc_html__( 'Permission denied', 'layout-recompiler-for-brizy' ) );
 		}
 
 		if ( ! class_exists( 'Brizy_Editor_Post' ) ) {
-			wp_send_json_error( 'Brizy is not active' );
+			wp_send_json_error( esc_html__( 'Brizy is not active', 'layout-recompiler-for-brizy' ) );
 		}
 
 		$post_ids = Brizy_Editor_Post::get_all_brizy_post_ids();
@@ -187,13 +189,11 @@ class Brizy_Fix {
 					$title = esc_html__( 'Other internal custom post type', 'layout-recompiler-for-brizy' );
 				}
 			} else {
-				if ( mb_strlen( $title ) > 40 ) {
-					$title = mb_substr( $title, 0, 40 ) . '...';
-				}
+				$title = wp_html_excerpt( wp_strip_all_tags( $title ), 40, '...' );
 			}
 
 			$posts_data[] = array(
-				'id'    => intval( $id ),
+				'id'    => absint( $id ),
 				'title' => $title,
 			);
 		}
@@ -208,24 +208,25 @@ class Brizy_Fix {
 		check_ajax_referer( 'brizy_fix_nonce', 'security' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( 'Permission denied' );
+			wp_send_json_error( esc_html__( 'Permission denied', 'layout-recompiler-for-brizy' ) );
 		}
 
 		// Dynamically raise memory limit if allowed.
 		wp_raise_memory_limit( 'admin' );
 
-		$post_id = isset( $_POST['post_id'] ) ? intval( $_POST['post_id'] ) : 0;
+		// Read the submitted post ID from AJAX, remove request slashes, and force it to a positive integer.
+		$post_id = isset( $_POST['post_id'] ) ? absint( wp_unslash( $_POST['post_id'] ) ) : 0;
 		if ( ! $post_id ) {
-			wp_send_json_error( array( 'error' => 'Invalid post ID' ) );
+			wp_send_json_error( array( 'error' => esc_html__( 'Invalid post ID', 'layout-recompiler-for-brizy' ) ) );
 		}
 
 		if ( ! class_exists( 'Brizy_Editor_Post' ) || ! class_exists( 'Brizy_Editor_Compiler' ) ) {
-			wp_send_json_error( array( 'error' => 'Brizy classes not found' ) );
+			wp_send_json_error( array( 'error' => esc_html__( 'Brizy classes not found', 'layout-recompiler-for-brizy' ) ) );
 		}
 
 		$post = Brizy_Editor_Post::get( $post_id );
 		if ( ! $post ) {
-			wp_send_json_error( array( 'error' => 'Post object not found' ) );
+			wp_send_json_error( array( 'error' => esc_html__( 'Post object not found', 'layout-recompiler-for-brizy' ) ) );
 		}
 
 		try {
@@ -243,13 +244,13 @@ class Brizy_Fix {
 			if ( $res ) {
 				wp_send_json_success( array(
 					'success'          => true,
-					'compiler_version' => get_post_meta( $post_id, 'brizy-post-compiler-version', true )
+					'compiler_version' => sanitize_text_field( get_post_meta( $post_id, 'brizy-post-compiler-version', true ) )
 				) );
 			} else {
-				wp_send_json_error( array( 'error' => 'Compiler did not return true' ) );
+				wp_send_json_error( array( 'error' => esc_html__( 'Compiler did not return true', 'layout-recompiler-for-brizy' ) ) );
 			}
 		} catch ( Exception $e ) {
-			wp_send_json_error( array( 'error' => $e->getMessage() ) );
+			wp_send_json_error( array( 'error' => sanitize_text_field( $e->getMessage() ) ) );
 		}
 	}
 }
