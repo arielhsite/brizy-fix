@@ -3,6 +3,12 @@ jQuery(document).ready(function($) {
 	var currentIndex = 0;
 	var compiledCount = 0;
 	var failedCount = 0;
+	var mediaPosts = [];
+	var mediaIndex = 0;
+	var mediaCheckedCount = 0;
+	var missingMedia = [];
+	var missingMediaKeys = {};
+	var affectedPageIds = {};
 
 	$('#brizy-fix-start-btn').on('click', function(e) {
 		e.preventDefault();
@@ -41,6 +47,62 @@ jQuery(document).ready(function($) {
 				resetBtn();
 			}
 		});
+	});
+
+	$('#brizy-fix-media-scan-btn').on('click', function(e) {
+		e.preventDefault();
+
+		$(this).prop('disabled', true).text(brizyFixData.messages.processing);
+		$('#brizy-fix-media-placeholder-btn').prop('disabled', true);
+		$('#brizy-fix-media-progress-section').show();
+		$('#brizy-fix-media-results').hide();
+		$('#brizy-fix-media-results-body').empty();
+		$('#brizy-fix-media-log').empty();
+		$('#brizy-fix-media-progress-title').text(brizyFixData.messages.mediaScanStart);
+
+		mediaPosts = [];
+		mediaIndex = 0;
+		mediaCheckedCount = 0;
+		missingMedia = [];
+		missingMediaKeys = {};
+		affectedPageIds = {};
+		updateMediaProgress();
+
+		$.ajax({
+			url: brizyFixData.ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'brizy_fix_get_media_scan_posts',
+				security: brizyFixData.nonce
+			},
+			success: function(response) {
+				if (response.success && response.data && response.data.length > 0) {
+					mediaPosts = response.data;
+					updateMediaProgress();
+					scanNextMediaPost();
+				} else {
+					logMediaMessage(brizyFixData.messages.noPages, 'error');
+					resetMediaScanButton();
+				}
+			},
+			error: function() {
+				logMediaMessage(brizyFixData.messages.failedList, 'error');
+				resetMediaScanButton();
+			}
+		});
+	});
+
+	$('#brizy-fix-media-placeholder-btn').on('click', function(e) {
+		e.preventDefault();
+
+		if (!missingMedia.length) {
+			logMediaMessage(brizyFixData.messages.mediaNoReport, 'warning');
+			return;
+		}
+
+		$(this).prop('disabled', true).text(brizyFixData.messages.processing);
+		logMediaMessage(brizyFixData.messages.mediaPlaceholderStart, 'warning');
+		createNextPlaceholderBatch(0);
 	});
 
 	function compileNext() {
@@ -101,5 +163,185 @@ jQuery(document).ready(function($) {
 
 	function resetBtn() {
 		$('#brizy-fix-start-btn').prop('disabled', false).text(brizyFixData.messages.start);
+	}
+
+	function scanNextMediaPost() {
+		if (mediaIndex >= mediaPosts.length) {
+			$('#brizy-fix-media-progress-title').text(brizyFixData.messages.mediaScanDone);
+			updateMediaProgress();
+			renderMediaResults();
+			resetMediaScanButton();
+			return;
+		}
+
+		var post = mediaPosts[mediaIndex];
+		$('#brizy-fix-media-progress-title').text(brizyFixData.messages.mediaScanning + '"' + post.title + '"...');
+
+		$.ajax({
+			url: brizyFixData.ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'brizy_fix_scan_media_post',
+				post_id: post.id,
+				security: brizyFixData.nonce
+			},
+			success: function(response) {
+				if (response.success && response.data) {
+					mediaCheckedCount += parseInt(response.data.checked_count, 10) || 0;
+					addMissingMediaItems(response.data.missing || [], response.data.post_id, response.data.post_title);
+				} else {
+					logMediaMessage('Could not scan "' + post.title + '". The scan will continue with the next item.', 'error');
+				}
+
+				mediaIndex++;
+				updateMediaProgress();
+				scanNextMediaPost();
+			},
+			error: function() {
+				logMediaMessage('Could not scan "' + post.title + '". The scan will continue with the next item.', 'error');
+				mediaIndex++;
+				updateMediaProgress();
+				scanNextMediaPost();
+			}
+		});
+	}
+
+	function addMissingMediaItems(items, postId, postTitle) {
+		if (!items.length) {
+			return;
+		}
+
+		affectedPageIds[postId] = true;
+		logMediaMessage(brizyFixData.messages.mediaFound + '"' + postTitle + '".', 'warning');
+
+		$.each(items, function(index, item) {
+			var key = item.uid || (item.attachment_id + ':' + item.local_path);
+			if (!missingMediaKeys[key]) {
+				item.affected_pages = [];
+				missingMediaKeys[key] = item;
+				missingMedia.push(item);
+			}
+
+			missingMediaKeys[key].affected_pages.push({
+				id: postId,
+				title: postTitle
+			});
+		});
+	}
+
+	function updateMediaProgress() {
+		var total = mediaPosts.length || 0;
+		var percent = total ? (mediaIndex / total) * 100 : 0;
+		$('#brizy-fix-media-progress-bar').css('width', percent + '%');
+		$('#brizy-fix-media-progress-text').text(mediaIndex + ' / ' + total + ' (' + missingMedia.length + ' missing file(s), ' + mediaCheckedCount + ' media reference(s) checked)');
+	}
+
+	function renderMediaResults() {
+		var affectedCount = Object.keys(affectedPageIds).length;
+
+		if (!missingMedia.length) {
+			$('#brizy-fix-media-results').show();
+			$('#brizy-fix-media-summary').text(brizyFixData.messages.mediaScanNone);
+			$('#brizy-fix-media-placeholder-btn').prop('disabled', true);
+			logMediaMessage(brizyFixData.messages.mediaScanNone, 'success');
+			return;
+		}
+
+		$('#brizy-fix-media-summary').text('Found ' + missingMedia.length + ' missing media file(s) across ' + affectedCount + ' affected page(s). Download the original files from the source links and place them into the exact local paths shown below. You may create yellow placeholders now so the front end stops showing broken image requests while you gather the originals.');
+		$('#brizy-fix-media-results-body').empty();
+
+		$.each(missingMedia, function(index, item) {
+			var mediaName = $('<div></div>').text(item.title || 'Untitled media');
+			var mediaMeta = $('<small></small>').text('Attachment ID: ' + (item.attachment_id || 'not found') + ' | Brizy media ID: ' + (item.uid || 'not found'));
+			var mediaCell = $('<td></td>').append(mediaName).append(mediaMeta);
+			var pathCell = $('<td class="brizy-fix-path"></td>').text(item.local_path || 'No local path found.');
+			var sourceCell = $('<td></td>');
+			var pagesCell = $('<td></td>');
+
+			if (item.source_url) {
+				sourceCell.append($('<a></a>', {
+					href: item.source_url,
+					target: '_blank',
+					rel: 'noopener noreferrer',
+					text: 'Open original image'
+				}));
+			} else {
+				sourceCell.text('No original source link was found in the database.');
+			}
+
+			pagesCell.text(uniquePageTitles(item.affected_pages).join(', '));
+
+			$('#brizy-fix-media-results-body').append(
+				$('<tr></tr>').append(mediaCell, pathCell, sourceCell, pagesCell)
+			);
+		});
+
+		$('#brizy-fix-media-results').show();
+		$('#brizy-fix-media-placeholder-btn').prop('disabled', false);
+	}
+
+	function createNextPlaceholderBatch(startIndex) {
+		var batch = missingMedia.slice(startIndex, startIndex + 5);
+		var uids = $.map(batch, function(item) {
+			return item.uid || null;
+		});
+
+		if (!batch.length) {
+			logMediaMessage(brizyFixData.messages.mediaPlaceholderDone, 'success');
+			$('#brizy-fix-media-placeholder-btn').prop('disabled', false).text(brizyFixData.messages.mediaPlaceholderButton);
+			return;
+		}
+
+		$.ajax({
+			url: brizyFixData.ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'brizy_fix_create_media_placeholders',
+				security: brizyFixData.nonce,
+				uids: uids
+			},
+			success: function(response) {
+				if (response.success && response.data && response.data.results) {
+					$.each(response.data.results, function(index, result) {
+						var type = result.status === 'created' ? 'success' : 'warning';
+						logMediaMessage((result.title || result.uid) + ': ' + result.message, type);
+					});
+				} else {
+					logMediaMessage('A placeholder batch could not be completed. The remaining items were skipped.', 'error');
+				}
+
+				createNextPlaceholderBatch(startIndex + 5);
+			},
+			error: function() {
+				logMediaMessage('A placeholder batch could not be completed. The remaining items were skipped.', 'error');
+				createNextPlaceholderBatch(startIndex + 5);
+			}
+		});
+	}
+
+	function uniquePageTitles(pages) {
+		var seen = {};
+		var titles = [];
+
+		$.each(pages || [], function(index, page) {
+			var key = page.id || page.title;
+			if (!seen[key]) {
+				seen[key] = true;
+				titles.push(page.title || ('Post ID ' + page.id));
+			}
+		});
+
+		return titles;
+	}
+
+	function logMediaMessage(msg, type) {
+		var item = $('<div class="brizy-fix-log-item"></div>').text(msg).addClass(type);
+		var log = $('#brizy-fix-media-log');
+		log.append(item);
+		log.scrollTop(log[0].scrollHeight);
+	}
+
+	function resetMediaScanButton() {
+		$('#brizy-fix-media-scan-btn').prop('disabled', false).text(brizyFixData.messages.mediaScanButton);
 	}
 });
