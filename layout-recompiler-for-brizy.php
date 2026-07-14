@@ -29,6 +29,7 @@ class Brizy_Fix {
 		add_action( 'wp_ajax_brizy_fix_get_media_scan_posts', array( $this, 'ajax_get_media_scan_posts' ) );
 		add_action( 'wp_ajax_brizy_fix_scan_media_post', array( $this, 'ajax_scan_media_post' ) );
 		add_action( 'wp_ajax_brizy_fix_create_media_placeholders', array( $this, 'ajax_create_media_placeholders' ) );
+		add_filter( 'brizy_asset_url', array( $this, 'normalize_brizy_asset_url' ), 10, 2 );
 	}
 
 	/**
@@ -332,6 +333,35 @@ class Brizy_Fix {
 		} catch ( Exception $e ) {
 			wp_send_json_error( array( 'error' => sanitize_text_field( $e->getMessage() ) ) );
 		}
+	}
+
+	/**
+	 * Normalize Brizy beta asset URLs on subdirectory installs.
+	 *
+	 * Brizy beta can return paths such as /demos/beta/wp-content/... as compiled asset
+	 * paths. Brizy's URL builder then prepends home_url(), which creates
+	 * /demos/beta/demos/beta/wp-content/... and prevents front-end CSS/JS from loading.
+	 *
+	 * @param string $url Asset URL.
+	 * @param object $asset Brizy asset object.
+	 * @return string
+	 */
+	public function normalize_brizy_asset_url( $url, $asset ) {
+		$home      = untrailingslashit( home_url() );
+		$home_path = wp_parse_url( $home, PHP_URL_PATH );
+
+		if ( ! $home_path ) {
+			return $url;
+		}
+
+		$duplicate = $home . $home_path . '/wp-content/';
+		$correct   = $home . '/wp-content/';
+
+		if ( 0 === strpos( $url, $duplicate ) ) {
+			return $correct . substr( $url, strlen( $duplicate ) );
+		}
+
+		return $url;
 	}
 
 	/**
