@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Layout Recompiler for Brizy
  * Description: Fixes broken Brizy layouts after a plugin update or site migration.
- * Version:     1.4.2
+ * Version:     1.4.3
  * Author:      just another tech
  * Author URI:  https://justanothertech.online
  * License:     GPL2
@@ -29,6 +29,7 @@ class Brizy_Fix {
 		add_action( 'wp_ajax_brizy_fix_get_media_scan_posts', array( $this, 'ajax_get_media_scan_posts' ) );
 		add_action( 'wp_ajax_brizy_fix_scan_media_post', array( $this, 'ajax_scan_media_post' ) );
 		add_action( 'wp_ajax_brizy_fix_create_media_placeholders', array( $this, 'ajax_create_media_placeholders' ) );
+		add_action( 'wp_ajax_brizy_fix_remove_media_placeholders', array( $this, 'ajax_remove_media_placeholders' ) );
 		add_filter( 'brizy_asset_url', array( $this, 'normalize_brizy_asset_url' ), 10, 2 );
 	}
 
@@ -111,7 +112,7 @@ class Brizy_Fix {
 		' );
 
 		// Enqueue the external JS file and localize data.
-		wp_enqueue_script( 'brizy-fix-admin', plugins_url( 'js/admin.js', __FILE__ ), array( 'jquery' ), '1.4.2', true );
+		wp_enqueue_script( 'brizy-fix-admin', plugins_url( 'js/admin.js', __FILE__ ), array( 'jquery' ), '1.4.3', true );
 		wp_localize_script( 'brizy-fix-admin', 'brizyFixData', array(
 			'ajaxurl'  => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'brizy_fix_nonce' ),
@@ -137,6 +138,9 @@ class Brizy_Fix {
 				'mediaPlaceholderStart' => esc_html__( 'Creating safe yellow placeholder files for missing media...', 'layout-recompiler-for-brizy' ),
 				'mediaPlaceholderDone' => esc_html__( 'Placeholder repair complete. You can replace the yellow placeholder files with the original images later.', 'layout-recompiler-for-brizy' ),
 				'mediaPlaceholderButton' => esc_html__( 'Create Yellow Placeholders', 'layout-recompiler-for-brizy' ),
+				'mediaRemovePlaceholderStart' => esc_html__( 'Removing yellow placeholder files that were created by this tool...', 'layout-recompiler-for-brizy' ),
+				'mediaRemovePlaceholderDone' => esc_html__( 'Yellow placeholder removal complete.', 'layout-recompiler-for-brizy' ),
+				'mediaRemovePlaceholderButton' => esc_html__( 'Remove Yellow Placeholders', 'layout-recompiler-for-brizy' ),
 				'mediaScanButton' => esc_html__( 'Scan Missing Brizy Media', 'layout-recompiler-for-brizy' ),
 				'mediaNoReport' => esc_html__( 'Please run the media scan first.', 'layout-recompiler-for-brizy' )
 			)
@@ -206,10 +210,13 @@ class Brizy_Fix {
 
 			<div class="card brizy-fix-step" style="max-width: 700px;">
 				<h2><?php esc_html_e( 'Step 2: Repair Missing Media', 'layout-recompiler-for-brizy' ); ?></h2>
-				<p><?php esc_html_e( 'Creates yellow placeholder image files only for missing upload paths. It never overwrites existing files and does not change WordPress database content. Replace those placeholder files later with the original images listed in the report.', 'layout-recompiler-for-brizy' ); ?></p>
+				<p><?php esc_html_e( 'Creates yellow placeholder image files only for missing upload paths. It never overwrites existing files and does not change WordPress database content. You can also remove yellow placeholders created by this tool if you no longer want them.', 'layout-recompiler-for-brizy' ); ?></p>
 				
 				<button id="brizy-fix-media-placeholder-btn" class="button" disabled>
 					<?php esc_html_e( 'Create Yellow Placeholders', 'layout-recompiler-for-brizy' ); ?>
+				</button>
+				<button id="brizy-fix-media-remove-placeholder-btn" class="button" disabled>
+					<?php esc_html_e( 'Remove Yellow Placeholders', 'layout-recompiler-for-brizy' ); ?>
 				</button>
 			</div>
 
@@ -478,6 +485,63 @@ class Brizy_Fix {
 	}
 
 	/**
+	 * AJAX endpoint to remove placeholder images created by this tool.
+	 */
+	public function ajax_remove_media_placeholders() {
+		check_ajax_referer( 'brizy_fix_nonce', 'security' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( esc_html__( 'Permission denied', 'layout-recompiler-for-brizy' ) );
+		}
+
+		$uids = isset( $_POST['uids'] ) && is_array( $_POST['uids'] )
+			? array_map( 'sanitize_text_field', wp_unslash( $_POST['uids'] ) )
+			: array();
+		$uids = array_map( array( $this, 'sanitize_media_uid' ), $uids );
+		$uids = array_values( array_filter( array_unique( $uids ) ) );
+
+		if ( empty( $uids ) ) {
+			wp_send_json_error( array( 'error' => esc_html__( 'No placeholder report was provided.', 'layout-recompiler-for-brizy' ) ) );
+		}
+
+		$results = array();
+		foreach ( array_slice( $uids, 0, 5 ) as $uid ) {
+			$media = $this->get_media_item_by_uid( $uid, 0 );
+			if ( ! $media || empty( $media['server_path'] ) || ! file_exists( $media['server_path'] ) ) {
+				$results[] = array(
+					'uid'     => $uid,
+					'status'  => 'skipped',
+					'message' => esc_html__( 'No local file was found for this media item.', 'layout-recompiler-for-brizy' ),
+				);
+				continue;
+			}
+
+			if ( ! $this->is_yellow_placeholder( $media['server_path'] ) ) {
+				$results[] = array(
+					'uid'     => $uid,
+					'title'   => $media['title'],
+					'status'  => 'skipped',
+					'message' => esc_html__( 'Skipped because this file does not look like a yellow placeholder created by this tool.', 'layout-recompiler-for-brizy' ),
+				);
+				continue;
+			}
+
+			$removed = wp_delete_file( $media['server_path'] );
+			$results[] = array(
+				'uid'        => $uid,
+				'title'      => $media['title'],
+				'local_path' => $media['local_path'],
+				'status'     => $removed ? 'removed' : 'failed',
+				'message'    => $removed
+					? esc_html__( 'The yellow placeholder was removed.', 'layout-recompiler-for-brizy' )
+					: esc_html__( 'The yellow placeholder could not be removed. Please check file permissions.', 'layout-recompiler-for-brizy' ),
+			);
+		}
+
+		wp_send_json_success( array( 'results' => $results ) );
+	}
+
+	/**
 	 * Get a clear title for pages, blocks, and internal Brizy posts.
 	 *
 	 * @param int $post_id Post ID.
@@ -602,38 +666,63 @@ class Brizy_Fix {
 			return null;
 		}
 
+		$media = $this->get_media_item_by_uid( $uid, $post_id );
+		if ( ! $media ) {
+			return null;
+		}
+
+		if ( ! empty( $media['server_path'] ) && file_exists( $media['server_path'] ) && ! $this->is_yellow_placeholder( $media['server_path'] ) ) {
+			return null;
+		}
+
+		$media['is_placeholder'] = ! empty( $media['server_path'] ) && file_exists( $media['server_path'] );
+
+		return $media;
+	}
+
+	/**
+	 * Resolve a Brizy media UID to media details.
+	 *
+	 * @param string $uid     Brizy media UID.
+	 * @param int    $post_id Post ID where the UID was found.
+	 * @return array|null
+	 */
+	private function get_media_item_by_uid( $uid, $post_id ) {
+		$uid = $this->sanitize_media_uid( $uid );
+		if ( ! $uid ) {
+			return null;
+		}
+
 		$attachment_id = $this->get_attachment_id_by_brizy_uid( $uid );
 
 		if ( ! $attachment_id ) {
 			return array(
-				'uid'           => $uid,
-				'attachment_id' => 0,
-				'title'         => esc_html__( 'Missing attachment record', 'layout-recompiler-for-brizy' ),
-				'local_path'    => esc_html__( 'No attachment record was found for this Brizy media ID.', 'layout-recompiler-for-brizy' ),
-				'server_path'   => '',
-				'source_url'    => '',
-				'post_id'       => absint( $post_id ),
-				'post_title'    => $post_id ? $this->get_display_title( $post_id ) : '',
+				'uid'            => $uid,
+				'attachment_id'  => 0,
+				'title'          => esc_html__( 'Missing attachment record', 'layout-recompiler-for-brizy' ),
+				'local_path'     => esc_html__( 'No attachment record was found for this Brizy media ID.', 'layout-recompiler-for-brizy' ),
+				'server_path'    => '',
+				'source_url'     => '',
+				'post_id'        => absint( $post_id ),
+				'post_title'     => $post_id ? $this->get_display_title( $post_id ) : '',
+				'is_placeholder' => false,
 			);
 		}
 
-		$file = get_attached_file( $attachment_id );
-		if ( $file && file_exists( $file ) ) {
-			return null;
-		}
-
+		$file       = get_attached_file( $attachment_id );
 		$attachment = get_post( $attachment_id );
 		$guid       = $attachment ? $attachment->guid : '';
 
 		return array(
-			'uid'           => $uid,
-			'attachment_id' => $attachment_id,
-			'title'         => $attachment ? get_the_title( $attachment_id ) : esc_html__( 'Untitled media', 'layout-recompiler-for-brizy' ),
-			'local_path'    => $file ? wp_normalize_path( $file ) : esc_html__( 'WordPress does not have an attached file path for this media item.', 'layout-recompiler-for-brizy' ),
-			'server_path'   => $file ? wp_normalize_path( $file ) : '',
-			'source_url'    => esc_url_raw( $guid ),
-			'post_id'       => absint( $post_id ),
-			'post_title'    => $post_id ? $this->get_display_title( $post_id ) : '',
+			'uid'            => $uid,
+			'attachment_id'  => $attachment_id,
+			'title'          => $attachment ? get_the_title( $attachment_id ) : esc_html__( 'Untitled media', 'layout-recompiler-for-brizy' ),
+			'local_path'     => $file ? wp_normalize_path( $file ) : esc_html__( 'WordPress does not have an attached file path for this media item.', 'layout-recompiler-for-brizy' ),
+			'server_path'    => $file ? wp_normalize_path( $file ) : '',
+			'source_url'     => esc_url_raw( $guid ),
+			'post_id'        => absint( $post_id ),
+			'post_title'     => $post_id ? $this->get_display_title( $post_id ) : '',
+			'is_placeholder' => $file && file_exists( $file ) ? $this->is_yellow_placeholder( $file ) : false,
 		);
 	}
 
@@ -734,6 +823,68 @@ class Brizy_Fix {
 		imagedestroy( $image );
 
 		return (bool) $created;
+	}
+
+	/**
+	 * Check whether a file looks like the plain yellow placeholder created by this tool.
+	 *
+	 * @param string $path File path.
+	 * @return bool
+	 */
+	private function is_yellow_placeholder( $path ) {
+		$path = wp_normalize_path( $path );
+		if ( ! $path || ! file_exists( $path ) ) {
+			return false;
+		}
+
+		$uploads = wp_get_upload_dir();
+		$base    = wp_normalize_path( $uploads['basedir'] );
+		if ( 0 !== strpos( $path, $base ) ) {
+			return false;
+		}
+
+		$size = getimagesize( $path );
+		if ( ! $size || 1600 !== (int) $size[0] || 1200 !== (int) $size[1] ) {
+			return false;
+		}
+
+		$extension = strtolower( pathinfo( $path, PATHINFO_EXTENSION ) );
+		if ( 'png' === $extension && function_exists( 'imagecreatefrompng' ) ) {
+			$image = imagecreatefrompng( $path );
+		} elseif ( in_array( $extension, array( 'jpg', 'jpeg' ), true ) && function_exists( 'imagecreatefromjpeg' ) ) {
+			$image = imagecreatefromjpeg( $path );
+		} else {
+			return false;
+		}
+
+		if ( ! $image ) {
+			return false;
+		}
+
+		$points = array(
+			array( 0, 0 ),
+			array( 1599, 0 ),
+			array( 0, 1199 ),
+			array( 1599, 1199 ),
+			array( 800, 600 ),
+		);
+
+		foreach ( $points as $point ) {
+			$rgb    = imagecolorat( $image, $point[0], $point[1] );
+			$red    = ( $rgb >> 16 ) & 0xFF;
+			$green  = ( $rgb >> 8 ) & 0xFF;
+			$blue   = $rgb & 0xFF;
+			$yellow = abs( $red - 255 ) <= 8 && abs( $green - 230 ) <= 8 && abs( $blue - 85 ) <= 8;
+
+			if ( ! $yellow ) {
+				imagedestroy( $image );
+				return false;
+			}
+		}
+
+		imagedestroy( $image );
+
+		return true;
 	}
 }
 

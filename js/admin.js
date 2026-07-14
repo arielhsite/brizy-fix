@@ -54,6 +54,7 @@ jQuery(document).ready(function($) {
 
 		$(this).prop('disabled', true).text(brizyFixData.messages.processing);
 		$('#brizy-fix-media-placeholder-btn').prop('disabled', true);
+		$('#brizy-fix-media-remove-placeholder-btn').prop('disabled', true);
 		$('#brizy-fix-media-progress-section').show();
 		$('#brizy-fix-media-results').hide();
 		$('#brizy-fix-media-results-body').empty();
@@ -95,14 +96,27 @@ jQuery(document).ready(function($) {
 	$('#brizy-fix-media-placeholder-btn').on('click', function(e) {
 		e.preventDefault();
 
-		if (!missingMedia.length) {
+		if (!getMissingWithoutPlaceholders().length) {
 			logMediaMessage(brizyFixData.messages.mediaNoReport, 'warning');
 			return;
 		}
 
 		$(this).prop('disabled', true).text(brizyFixData.messages.processing);
 		logMediaMessage(brizyFixData.messages.mediaPlaceholderStart, 'warning');
-		createNextPlaceholderBatch(0);
+		createNextPlaceholderBatch(getMissingWithoutPlaceholders(), 0);
+	});
+
+	$('#brizy-fix-media-remove-placeholder-btn').on('click', function(e) {
+		e.preventDefault();
+
+		if (!getPlaceholderMedia().length) {
+			logMediaMessage(brizyFixData.messages.mediaNoReport, 'warning');
+			return;
+		}
+
+		$(this).prop('disabled', true).text(brizyFixData.messages.processing);
+		logMediaMessage(brizyFixData.messages.mediaRemovePlaceholderStart, 'warning');
+		removeNextPlaceholderBatch(getPlaceholderMedia(), 0);
 	});
 
 	function compileNext() {
@@ -243,11 +257,12 @@ jQuery(document).ready(function($) {
 			$('#brizy-fix-media-results').show();
 			$('#brizy-fix-media-summary').text(brizyFixData.messages.mediaScanNone);
 			$('#brizy-fix-media-placeholder-btn').prop('disabled', true);
+			$('#brizy-fix-media-remove-placeholder-btn').prop('disabled', true);
 			logMediaMessage(brizyFixData.messages.mediaScanNone, 'success');
 			return;
 		}
 
-		$('#brizy-fix-media-summary').text('Found ' + missingMedia.length + ' missing media file(s) across ' + affectedCount + ' affected page(s). Download the original files from the source links and place them into the exact local paths shown below. You may create yellow placeholders now so the front end stops showing broken image requests while you gather the originals.');
+		$('#brizy-fix-media-summary').text('Found ' + missingMedia.length + ' missing media file(s) across ' + affectedCount + ' affected page(s). Download the original files from the source links and place them into the exact local paths shown below. You may create yellow placeholders now so the front end stops showing broken image requests while you gather the originals, or remove existing yellow placeholders if you no longer want them.');
 		$('#brizy-fix-media-results-body').empty();
 
 		$.each(missingMedia, function(index, item) {
@@ -255,6 +270,7 @@ jQuery(document).ready(function($) {
 			var mediaMeta = $('<small></small>').text('Attachment ID: ' + (item.attachment_id || 'not found') + ' | Brizy media ID: ' + (item.uid || 'not found'));
 			var mediaCell = $('<td></td>').append(mediaName).append(mediaMeta);
 			var pathCell = $('<td class="brizy-fix-path"></td>').text(item.local_path || 'No local path found.');
+			var statusText = item.is_placeholder ? 'A yellow placeholder currently exists for this file.' : 'The expected local file is missing.';
 			var sourceCell = $('<td></td>');
 			var pagesCell = $('<td></td>');
 
@@ -269,6 +285,7 @@ jQuery(document).ready(function($) {
 				sourceCell.text('No original source link was found in the database.');
 			}
 
+			pathCell.append($('<small></small>').text(statusText));
 			pagesCell.text(uniquePageTitles(item.affected_pages).join(', '));
 
 			$('#brizy-fix-media-results-body').append(
@@ -277,11 +294,12 @@ jQuery(document).ready(function($) {
 		});
 
 		$('#brizy-fix-media-results').show();
-		$('#brizy-fix-media-placeholder-btn').prop('disabled', false);
+		$('#brizy-fix-media-placeholder-btn').prop('disabled', !getMissingWithoutPlaceholders().length);
+		$('#brizy-fix-media-remove-placeholder-btn').prop('disabled', !getPlaceholderMedia().length);
 	}
 
-	function createNextPlaceholderBatch(startIndex) {
-		var batch = missingMedia.slice(startIndex, startIndex + 5);
+	function createNextPlaceholderBatch(items, startIndex) {
+		var batch = items.slice(startIndex, startIndex + 5);
 		var uids = $.map(batch, function(item) {
 			return item.uid || null;
 		});
@@ -289,6 +307,7 @@ jQuery(document).ready(function($) {
 		if (!batch.length) {
 			logMediaMessage(brizyFixData.messages.mediaPlaceholderDone, 'success');
 			$('#brizy-fix-media-placeholder-btn').prop('disabled', false).text(brizyFixData.messages.mediaPlaceholderButton);
+			renderMediaResults();
 			return;
 		}
 
@@ -304,17 +323,83 @@ jQuery(document).ready(function($) {
 				if (response.success && response.data && response.data.results) {
 					$.each(response.data.results, function(index, result) {
 						var type = result.status === 'created' ? 'success' : 'warning';
+						if (result.status === 'created') {
+							markPlaceholderState(result.uid, true);
+						}
 						logMediaMessage((result.title || result.uid) + ': ' + result.message, type);
 					});
 				} else {
 					logMediaMessage('A placeholder batch could not be completed. The remaining items were skipped.', 'error');
 				}
 
-				createNextPlaceholderBatch(startIndex + 5);
+				createNextPlaceholderBatch(items, startIndex + 5);
 			},
 			error: function() {
 				logMediaMessage('A placeholder batch could not be completed. The remaining items were skipped.', 'error');
-				createNextPlaceholderBatch(startIndex + 5);
+				createNextPlaceholderBatch(items, startIndex + 5);
+			}
+		});
+	}
+
+	function removeNextPlaceholderBatch(items, startIndex) {
+		var batch = items.slice(startIndex, startIndex + 5);
+		var uids = $.map(batch, function(item) {
+			return item.uid || null;
+		});
+
+		if (!batch.length) {
+			logMediaMessage(brizyFixData.messages.mediaRemovePlaceholderDone, 'success');
+			$('#brizy-fix-media-remove-placeholder-btn').prop('disabled', false).text(brizyFixData.messages.mediaRemovePlaceholderButton);
+			renderMediaResults();
+			return;
+		}
+
+		$.ajax({
+			url: brizyFixData.ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'brizy_fix_remove_media_placeholders',
+				security: brizyFixData.nonce,
+				uids: uids
+			},
+			success: function(response) {
+				if (response.success && response.data && response.data.results) {
+					$.each(response.data.results, function(index, result) {
+						var type = result.status === 'removed' ? 'success' : 'warning';
+						if (result.status === 'removed') {
+							markPlaceholderState(result.uid, false);
+						}
+						logMediaMessage((result.title || result.uid) + ': ' + result.message, type);
+					});
+				} else {
+					logMediaMessage('A placeholder removal batch could not be completed. The remaining items were skipped.', 'error');
+				}
+
+				removeNextPlaceholderBatch(items, startIndex + 5);
+			},
+			error: function() {
+				logMediaMessage('A placeholder removal batch could not be completed. The remaining items were skipped.', 'error');
+				removeNextPlaceholderBatch(items, startIndex + 5);
+			}
+		});
+	}
+
+	function getMissingWithoutPlaceholders() {
+		return $.grep(missingMedia, function(item) {
+			return !item.is_placeholder;
+		});
+	}
+
+	function getPlaceholderMedia() {
+		return $.grep(missingMedia, function(item) {
+			return !!item.is_placeholder;
+		});
+	}
+
+	function markPlaceholderState(uid, isPlaceholder) {
+		$.each(missingMedia, function(index, item) {
+			if (item.uid === uid) {
+				item.is_placeholder = isPlaceholder;
 			}
 		});
 	}

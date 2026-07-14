@@ -24,7 +24,7 @@ This plugin does not include license checks, trials, paid feature locks, usage q
 ### Key Features
 * **AJAX-Based Execution**: Runs incrementally, compiling one page at a time. This keeps memory usage low and prevents common "500 Internal Server Error" or execution timeouts on low-memory servers (below 256MB).
 * **Missing Brizy Media Scan**: Checks Brizy pages one at a time for missing upload files, including rendered Brizy beta output, then shows the exact local paths, source links, and affected pages.
-* **Yellow Placeholder Repair**: Creates plain yellow placeholder files only when the expected upload file is missing. It never overwrites existing files and does not change database content.
+* **Yellow Placeholder Repair**: Creates plain yellow placeholder files only when the expected upload file is missing, and can remove placeholders created by this tool if you no longer want them. It never overwrites existing files and does not change database content.
 * **Safe Re-generation**: The plugin reads your design templates in a read-only fashion (using JSON layouts stored in the database) and only updates the output HTML wrappers. Your database files and design structures are completely safe.
 * **Real-time Logging**: Displays a detailed progress bar and status feed in your admin area to show successful compilations or skipped layout assets.
 
@@ -72,7 +72,7 @@ For highly complex websites, we recommend temporarily disabling non-essential th
 2. Upload the `layout-recompiler-for-brizy` folder to your `/wp-content/plugins/` directory.
 3. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
 4. Navigate to **Tools > Layout Recompiler** in your WordPress Admin Sidebar.
-5. Optional: click **Scan Missing Brizy Media** to check for missing upload files and create yellow placeholders if needed.
+5. Optional: click **Scan Missing Brizy Media** to check for missing upload files, create yellow placeholders, or remove placeholders created by this tool.
 6. Click **Start Recompilation** and let the queue progress to 100%.
 
 You can watch the screencast here: https://youtu.be/aOkBbAWAcWI
