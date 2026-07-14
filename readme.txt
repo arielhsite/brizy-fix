@@ -5,7 +5,7 @@ Tags: builder, layout, fix, migration, tools
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.2
-Stable tag: 1.4.3
+Stable tag: 1.4.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,7 +22,7 @@ This plugin does not include license checks, trials, paid feature locks, usage q
 === Key Features ===
 * **AJAX-Based Execution**: Runs incrementally, compiling one page at a time. This keeps memory usage low and prevents common "500 Internal Server Error" or execution timeouts on low-memory servers (below 256MB).
 * **Missing Brizy Media Scan**: Checks Brizy pages one at a time for missing upload files, including rendered Brizy beta output, then shows the exact local paths, source links, and affected pages.
-* **Yellow Placeholder Repair**: Creates plain yellow placeholder files only when the expected upload file is missing, and can remove placeholders created by this tool if you no longer want them. It never overwrites existing files and does not change database content.
+* **Missing Media Placeholders**: Creates yellow or blank placeholder files only when the expected upload file is missing, and can remove yellow placeholders created by this tool if you no longer want them. It never overwrites real media files and does not change database content.
 * **Safe Re-generation**: The plugin reads your design templates in a read-only fashion (using JSON layouts stored in the database) and only updates the output HTML wrappers. Your database files and design structures are completely safe.
 * **Real-time Logging**: Displays a detailed progress bar and status feed in your admin area to show successful compilations or skipped layout assets.
 
@@ -55,7 +55,7 @@ For highly complex websites, we recommend temporarily disabling non-essential th
 1. Upload the `layout-recompiler-for-brizy` folder to your `/wp-content/plugins/` directory.
 2. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
 3. Navigate to **Tools > Layout Recompiler** in your WordPress Admin Sidebar.
-4. Optional: click **Scan Missing Brizy Media** to check for missing upload files, create yellow placeholders, or remove placeholders created by this tool.
+4. Optional: click **Scan Missing Brizy Media** to check for missing upload files, create yellow or blank placeholders, or remove yellow placeholders created by this tool.
 5. Click **Start Recompilation** and let the queue progress to 100%.
 
 You can watch the screencast here: https://youtu.be/aOkBbAWAcWI
@@ -75,6 +75,11 @@ Once the recompilation process is complete and you have verified that your layou
 3. The recompilation screen shows the start button, progress bar, and live process log.
 
 == Changelog ==
+
+= 1.4.4 =
+* Added blank placeholder creation for missing Brizy media when yellow fallback blocks are not desired.
+* Blank placeholders can replace only plugin-created yellow placeholders or fill missing upload paths; real media files are never overwritten.
+* Improves handling for Brizy background-image sections where removing a yellow placeholder can reveal the section fallback color.
 
 = 1.4.3 =
 * Added an option to remove yellow placeholder files created by the plugin.
@@ -97,6 +102,9 @@ Once the recompilation process is complete and you have verified that your layou
 * Enqueues JavaScript externally and maps internal hex UID titles to clear descriptions.
 
 == Upgrade Notice ==
+
+= 1.4.4 =
+Adds blank placeholders for missing media and background-image sections when yellow placeholders are not desired.
 
 = 1.4.3 =
 Adds a safe option to remove yellow placeholders created by the plugin.

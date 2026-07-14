@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Layout Recompiler for Brizy
  * Description: Fixes broken Brizy layouts after a plugin update or site migration.
- * Version:     1.4.3
+ * Version:     1.4.4
  * Author:      just another tech
  * Author URI:  https://justanothertech.online
  * License:     GPL2
@@ -29,6 +29,7 @@ class Brizy_Fix {
 		add_action( 'wp_ajax_brizy_fix_get_media_scan_posts', array( $this, 'ajax_get_media_scan_posts' ) );
 		add_action( 'wp_ajax_brizy_fix_scan_media_post', array( $this, 'ajax_scan_media_post' ) );
 		add_action( 'wp_ajax_brizy_fix_create_media_placeholders', array( $this, 'ajax_create_media_placeholders' ) );
+		add_action( 'wp_ajax_brizy_fix_create_blank_placeholders', array( $this, 'ajax_create_blank_placeholders' ) );
 		add_action( 'wp_ajax_brizy_fix_remove_media_placeholders', array( $this, 'ajax_remove_media_placeholders' ) );
 		add_filter( 'brizy_asset_url', array( $this, 'normalize_brizy_asset_url' ), 10, 2 );
 	}
@@ -112,7 +113,7 @@ class Brizy_Fix {
 		' );
 
 		// Enqueue the external JS file and localize data.
-		wp_enqueue_script( 'brizy-fix-admin', plugins_url( 'js/admin.js', __FILE__ ), array( 'jquery' ), '1.4.3', true );
+		wp_enqueue_script( 'brizy-fix-admin', plugins_url( 'js/admin.js', __FILE__ ), array( 'jquery' ), '1.4.4', true );
 		wp_localize_script( 'brizy-fix-admin', 'brizyFixData', array(
 			'ajaxurl'  => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'brizy_fix_nonce' ),
@@ -138,6 +139,9 @@ class Brizy_Fix {
 				'mediaPlaceholderStart' => esc_html__( 'Creating safe yellow placeholder files for missing media...', 'layout-recompiler-for-brizy' ),
 				'mediaPlaceholderDone' => esc_html__( 'Placeholder repair complete. You can replace the yellow placeholder files with the original images later.', 'layout-recompiler-for-brizy' ),
 				'mediaPlaceholderButton' => esc_html__( 'Create Yellow Placeholders', 'layout-recompiler-for-brizy' ),
+				'mediaBlankPlaceholderStart' => esc_html__( 'Creating blank placeholder files for missing media...', 'layout-recompiler-for-brizy' ),
+				'mediaBlankPlaceholderDone' => esc_html__( 'Blank placeholder repair complete.', 'layout-recompiler-for-brizy' ),
+				'mediaBlankPlaceholderButton' => esc_html__( 'Create Blank Placeholders', 'layout-recompiler-for-brizy' ),
 				'mediaRemovePlaceholderStart' => esc_html__( 'Removing yellow placeholder files that were created by this tool...', 'layout-recompiler-for-brizy' ),
 				'mediaRemovePlaceholderDone' => esc_html__( 'Yellow placeholder removal complete.', 'layout-recompiler-for-brizy' ),
 				'mediaRemovePlaceholderButton' => esc_html__( 'Remove Yellow Placeholders', 'layout-recompiler-for-brizy' ),
@@ -210,10 +214,13 @@ class Brizy_Fix {
 
 			<div class="card brizy-fix-step" style="max-width: 700px;">
 				<h2><?php esc_html_e( 'Step 2: Repair Missing Media', 'layout-recompiler-for-brizy' ); ?></h2>
-				<p><?php esc_html_e( 'Creates yellow placeholder image files only for missing upload paths. It never overwrites existing files and does not change WordPress database content. You can also remove yellow placeholders created by this tool if you no longer want them.', 'layout-recompiler-for-brizy' ); ?></p>
+				<p><?php esc_html_e( 'Creates placeholder image files only for missing upload paths. It never overwrites real media and does not change WordPress database content. Use blank placeholders if you do not want yellow fallback blocks on the front end.', 'layout-recompiler-for-brizy' ); ?></p>
 				
 				<button id="brizy-fix-media-placeholder-btn" class="button" disabled>
 					<?php esc_html_e( 'Create Yellow Placeholders', 'layout-recompiler-for-brizy' ); ?>
+				</button>
+				<button id="brizy-fix-media-blank-placeholder-btn" class="button" disabled>
+					<?php esc_html_e( 'Create Blank Placeholders', 'layout-recompiler-for-brizy' ); ?>
 				</button>
 				<button id="brizy-fix-media-remove-placeholder-btn" class="button" disabled>
 					<?php esc_html_e( 'Remove Yellow Placeholders', 'layout-recompiler-for-brizy' ); ?>
@@ -478,6 +485,64 @@ class Brizy_Fix {
 				'message'    => $created
 					? esc_html__( 'A yellow placeholder was created for this missing file.', 'layout-recompiler-for-brizy' )
 					: esc_html__( 'The placeholder could not be created. Please check folder permissions.', 'layout-recompiler-for-brizy' ),
+			);
+		}
+
+		wp_send_json_success( array( 'results' => $results ) );
+	}
+
+	/**
+	 * AJAX endpoint to create neutral blank placeholders for missing media.
+	 */
+	public function ajax_create_blank_placeholders() {
+		check_ajax_referer( 'brizy_fix_nonce', 'security' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( esc_html__( 'Permission denied', 'layout-recompiler-for-brizy' ) );
+		}
+
+		$uids = isset( $_POST['uids'] ) && is_array( $_POST['uids'] )
+			? array_map( 'sanitize_text_field', wp_unslash( $_POST['uids'] ) )
+			: array();
+		$uids = array_map( array( $this, 'sanitize_media_uid' ), $uids );
+		$uids = array_values( array_filter( array_unique( $uids ) ) );
+
+		if ( empty( $uids ) ) {
+			wp_send_json_error( array( 'error' => esc_html__( 'No missing media report was provided.', 'layout-recompiler-for-brizy' ) ) );
+		}
+
+		$results = array();
+		foreach ( array_slice( $uids, 0, 5 ) as $uid ) {
+			$media = $this->get_media_item_by_uid( $uid, 0 );
+			if ( ! $media || empty( $media['server_path'] ) ) {
+				$results[] = array(
+					'uid'     => $uid,
+					'status'  => 'skipped',
+					'message' => esc_html__( 'No local upload path was found for this media item.', 'layout-recompiler-for-brizy' ),
+				);
+				continue;
+			}
+
+			$file_exists = file_exists( $media['server_path'] );
+			if ( $file_exists && ! $this->is_yellow_placeholder( $media['server_path'] ) && ! $this->is_blank_placeholder( $media['server_path'] ) ) {
+				$results[] = array(
+					'uid'     => $uid,
+					'title'   => $media['title'],
+					'status'  => 'skipped',
+					'message' => esc_html__( 'Skipped because a real media file already exists at this path.', 'layout-recompiler-for-brizy' ),
+				);
+				continue;
+			}
+
+			$created = $this->create_blank_placeholder( $media['server_path'], $file_exists );
+			$results[] = array(
+				'uid'        => $uid,
+				'title'      => $media['title'],
+				'local_path' => $media['local_path'],
+				'status'     => $created ? ( $file_exists ? 'replaced' : 'created' ) : 'failed',
+				'message'    => $created
+					? esc_html__( 'A blank placeholder was saved for this missing file.', 'layout-recompiler-for-brizy' )
+					: esc_html__( 'The blank placeholder could not be created. Please check folder permissions.', 'layout-recompiler-for-brizy' ),
 			);
 		}
 
@@ -826,6 +891,62 @@ class Brizy_Fix {
 	}
 
 	/**
+	 * Create a neutral blank placeholder at a missing upload path.
+	 *
+	 * @param string $path      Target file path.
+	 * @param bool   $overwrite Whether an existing safe placeholder may be replaced.
+	 * @return bool
+	 */
+	private function create_blank_placeholder( $path, $overwrite = false ) {
+		$path = wp_normalize_path( $path );
+		if ( ! $path ) {
+			return false;
+		}
+
+		if ( file_exists( $path ) && ! $overwrite ) {
+			return false;
+		}
+
+		$uploads = wp_get_upload_dir();
+		$base    = wp_normalize_path( $uploads['basedir'] );
+		if ( 0 !== strpos( $path, $base ) ) {
+			return false;
+		}
+
+		if ( ! wp_mkdir_p( dirname( $path ) ) ) {
+			return false;
+		}
+
+		if ( ! function_exists( 'imagecreatetruecolor' ) ) {
+			return false;
+		}
+
+		$extension = strtolower( pathinfo( $path, PATHINFO_EXTENSION ) );
+		$image     = imagecreatetruecolor( 1600, 1200 );
+		if ( ! $image ) {
+			return false;
+		}
+
+		if ( 'png' === $extension ) {
+			imagealphablending( $image, false );
+			imagesavealpha( $image, true );
+			$blank = imagecolorallocatealpha( $image, 255, 255, 255, 127 );
+			imagefilledrectangle( $image, 0, 0, 1600, 1200, $blank );
+			$created = imagepng( $image, $path );
+		} elseif ( in_array( $extension, array( 'jpg', 'jpeg' ), true ) ) {
+			$blank = imagecolorallocate( $image, 255, 255, 255 );
+			imagefilledrectangle( $image, 0, 0, 1600, 1200, $blank );
+			$created = imagejpeg( $image, $path, 90 );
+		} else {
+			$created = false;
+		}
+
+		imagedestroy( $image );
+
+		return (bool) $created;
+	}
+
+	/**
 	 * Check whether a file looks like the plain yellow placeholder created by this tool.
 	 *
 	 * @param string $path File path.
@@ -877,6 +998,69 @@ class Brizy_Fix {
 			$yellow = abs( $red - 255 ) <= 8 && abs( $green - 230 ) <= 8 && abs( $blue - 85 ) <= 8;
 
 			if ( ! $yellow ) {
+				imagedestroy( $image );
+				return false;
+			}
+		}
+
+		imagedestroy( $image );
+
+		return true;
+	}
+
+	/**
+	 * Check whether a file looks like the neutral blank placeholder created by this tool.
+	 *
+	 * @param string $path File path.
+	 * @return bool
+	 */
+	private function is_blank_placeholder( $path ) {
+		$path = wp_normalize_path( $path );
+		if ( ! $path || ! file_exists( $path ) ) {
+			return false;
+		}
+
+		$uploads = wp_get_upload_dir();
+		$base    = wp_normalize_path( $uploads['basedir'] );
+		if ( 0 !== strpos( $path, $base ) ) {
+			return false;
+		}
+
+		$size = getimagesize( $path );
+		if ( ! $size || 1600 !== (int) $size[0] || 1200 !== (int) $size[1] ) {
+			return false;
+		}
+
+		$extension = strtolower( pathinfo( $path, PATHINFO_EXTENSION ) );
+		if ( 'png' === $extension && function_exists( 'imagecreatefrompng' ) ) {
+			$image = imagecreatefrompng( $path );
+		} elseif ( in_array( $extension, array( 'jpg', 'jpeg' ), true ) && function_exists( 'imagecreatefromjpeg' ) ) {
+			$image = imagecreatefromjpeg( $path );
+		} else {
+			return false;
+		}
+
+		if ( ! $image ) {
+			return false;
+		}
+
+		$points = array(
+			array( 0, 0 ),
+			array( 1599, 0 ),
+			array( 0, 1199 ),
+			array( 1599, 1199 ),
+			array( 800, 600 ),
+		);
+
+		foreach ( $points as $point ) {
+			$rgb   = imagecolorat( $image, $point[0], $point[1] );
+			$red   = ( $rgb >> 16 ) & 0xFF;
+			$green = ( $rgb >> 8 ) & 0xFF;
+			$blue  = $rgb & 0xFF;
+			$alpha = ( $rgb & 0x7F000000 ) >> 24;
+			$blank = ( $alpha >= 120 ) || ( abs( $red - 255 ) <= 8 && abs( $green - 255 ) <= 8 && abs( $blue - 255 ) <= 8 );
+
+			if ( ! $blank ) {
 				imagedestroy( $image );
 				return false;
 			}

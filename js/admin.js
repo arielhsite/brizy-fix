@@ -54,6 +54,7 @@ jQuery(document).ready(function($) {
 
 		$(this).prop('disabled', true).text(brizyFixData.messages.processing);
 		$('#brizy-fix-media-placeholder-btn').prop('disabled', true);
+		$('#brizy-fix-media-blank-placeholder-btn').prop('disabled', true);
 		$('#brizy-fix-media-remove-placeholder-btn').prop('disabled', true);
 		$('#brizy-fix-media-progress-section').show();
 		$('#brizy-fix-media-results').hide();
@@ -117,6 +118,19 @@ jQuery(document).ready(function($) {
 		$(this).prop('disabled', true).text(brizyFixData.messages.processing);
 		logMediaMessage(brizyFixData.messages.mediaRemovePlaceholderStart, 'warning');
 		removeNextPlaceholderBatch(getPlaceholderMedia(), 0);
+	});
+
+	$('#brizy-fix-media-blank-placeholder-btn').on('click', function(e) {
+		e.preventDefault();
+
+		if (!missingMedia.length) {
+			logMediaMessage(brizyFixData.messages.mediaNoReport, 'warning');
+			return;
+		}
+
+		$(this).prop('disabled', true).text(brizyFixData.messages.processing);
+		logMediaMessage(brizyFixData.messages.mediaBlankPlaceholderStart, 'warning');
+		createNextBlankPlaceholderBatch(missingMedia.slice(), 0);
 	});
 
 	function compileNext() {
@@ -257,12 +271,13 @@ jQuery(document).ready(function($) {
 			$('#brizy-fix-media-results').show();
 			$('#brizy-fix-media-summary').text(brizyFixData.messages.mediaScanNone);
 			$('#brizy-fix-media-placeholder-btn').prop('disabled', true);
+			$('#brizy-fix-media-blank-placeholder-btn').prop('disabled', true);
 			$('#brizy-fix-media-remove-placeholder-btn').prop('disabled', true);
 			logMediaMessage(brizyFixData.messages.mediaScanNone, 'success');
 			return;
 		}
 
-		$('#brizy-fix-media-summary').text('Found ' + missingMedia.length + ' missing media file(s) across ' + affectedCount + ' affected page(s). Download the original files from the source links and place them into the exact local paths shown below. You may create yellow placeholders now so the front end stops showing broken image requests while you gather the originals, or remove existing yellow placeholders if you no longer want them.');
+		$('#brizy-fix-media-summary').text('Found ' + missingMedia.length + ' missing media file(s) across ' + affectedCount + ' affected page(s). Download the original files from the source links and place them into the exact local paths shown below. You may create yellow placeholders, create blank placeholders, or remove existing yellow placeholders if you no longer want them.');
 		$('#brizy-fix-media-results-body').empty();
 
 		$.each(missingMedia, function(index, item) {
@@ -295,6 +310,7 @@ jQuery(document).ready(function($) {
 
 		$('#brizy-fix-media-results').show();
 		$('#brizy-fix-media-placeholder-btn').prop('disabled', !getMissingWithoutPlaceholders().length);
+		$('#brizy-fix-media-blank-placeholder-btn').prop('disabled', !missingMedia.length);
 		$('#brizy-fix-media-remove-placeholder-btn').prop('disabled', !getPlaceholderMedia().length);
 	}
 
@@ -384,6 +400,49 @@ jQuery(document).ready(function($) {
 		});
 	}
 
+	function createNextBlankPlaceholderBatch(items, startIndex) {
+		var batch = items.slice(startIndex, startIndex + 5);
+		var uids = $.map(batch, function(item) {
+			return item.uid || null;
+		});
+
+		if (!batch.length) {
+			logMediaMessage(brizyFixData.messages.mediaBlankPlaceholderDone, 'success');
+			$('#brizy-fix-media-blank-placeholder-btn').prop('disabled', false).text(brizyFixData.messages.mediaBlankPlaceholderButton);
+			renderMediaResults();
+			return;
+		}
+
+		$.ajax({
+			url: brizyFixData.ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'brizy_fix_create_blank_placeholders',
+				security: brizyFixData.nonce,
+				uids: uids
+			},
+			success: function(response) {
+				if (response.success && response.data && response.data.results) {
+					$.each(response.data.results, function(index, result) {
+						var type = (result.status === 'created' || result.status === 'replaced') ? 'success' : 'warning';
+						if (result.status === 'created' || result.status === 'replaced') {
+							removeMissingMediaItem(result.uid);
+						}
+						logMediaMessage((result.title || result.uid) + ': ' + result.message, type);
+					});
+				} else {
+					logMediaMessage('A blank placeholder batch could not be completed. The remaining items were skipped.', 'error');
+				}
+
+				createNextBlankPlaceholderBatch(items, startIndex + 5);
+			},
+			error: function() {
+				logMediaMessage('A blank placeholder batch could not be completed. The remaining items were skipped.', 'error');
+				createNextBlankPlaceholderBatch(items, startIndex + 5);
+			}
+		});
+	}
+
 	function getMissingWithoutPlaceholders() {
 		return $.grep(missingMedia, function(item) {
 			return !item.is_placeholder;
@@ -401,6 +460,25 @@ jQuery(document).ready(function($) {
 			if (item.uid === uid) {
 				item.is_placeholder = isPlaceholder;
 			}
+		});
+	}
+
+	function removeMissingMediaItem(uid) {
+		missingMedia = $.grep(missingMedia, function(item) {
+			return item.uid !== uid;
+		});
+		delete missingMediaKeys[uid];
+		rebuildAffectedPageIds();
+	}
+
+	function rebuildAffectedPageIds() {
+		affectedPageIds = {};
+		$.each(missingMedia, function(index, item) {
+			$.each(item.affected_pages || [], function(pageIndex, page) {
+				if (page.id) {
+					affectedPageIds[page.id] = true;
+				}
+			});
 		});
 	}
 
