@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Layout Recompiler for Brizy
  * Description: Fixes broken Brizy layouts after a plugin update or site migration.
- * Version:     1.4.0
+ * Version:     1.4.2
  * Author:      just another tech
  * Author URI:  https://justanothertech.online
  * License:     GPL2
@@ -111,7 +111,7 @@ class Brizy_Fix {
 		' );
 
 		// Enqueue the external JS file and localize data.
-		wp_enqueue_script( 'brizy-fix-admin', plugins_url( 'js/admin.js', __FILE__ ), array( 'jquery' ), '1.4.0', true );
+		wp_enqueue_script( 'brizy-fix-admin', plugins_url( 'js/admin.js', __FILE__ ), array( 'jquery' ), '1.4.2', true );
 		wp_localize_script( 'brizy-fix-admin', 'brizyFixData', array(
 			'ajaxurl'  => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'brizy_fix_nonce' ),
@@ -520,7 +520,37 @@ class Brizy_Fix {
 			}
 		}
 
+		$content .= "\n" . $this->get_rendered_post_scan_content( $post_id );
+
 		return $content;
+	}
+
+	/**
+	 * Fetch rendered front-end markup for Brizy beta media references.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string
+	 */
+	private function get_rendered_post_scan_content( $post_id ) {
+		$url = get_permalink( $post_id );
+		if ( ! $url ) {
+			return '';
+		}
+
+		$response = wp_safe_remote_get(
+			add_query_arg( 'brizy_fix_media_scan', time(), $url ),
+			array(
+				'timeout'     => 15,
+				'redirection' => 3,
+				'user-agent'  => 'Layout Recompiler for Brizy media scan',
+			)
+		);
+
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			return '';
+		}
+
+		return (string) wp_remote_retrieve_body( $response );
 	}
 
 	/**

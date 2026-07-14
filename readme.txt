@@ -5,7 +5,7 @@ Tags: builder, layout, fix, migration, tools
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.2
-Stable tag: 1.4.0
+Stable tag: 1.4.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,7 +21,7 @@ This plugin does not include license checks, trials, paid feature locks, usage q
 
 === Key Features ===
 * **AJAX-Based Execution**: Runs incrementally, compiling one page at a time. This keeps memory usage low and prevents common "500 Internal Server Error" or execution timeouts on low-memory servers (below 256MB).
-* **Missing Brizy Media Scan**: Checks Brizy pages one at a time for missing upload files, then shows the exact local paths, source links, and affected pages.
+* **Missing Brizy Media Scan**: Checks Brizy pages one at a time for missing upload files, including rendered Brizy beta output, then shows the exact local paths, source links, and affected pages.
 * **Yellow Placeholder Repair**: Creates plain yellow placeholder files only when the expected upload file is missing. It never overwrites existing files and does not change database content.
 * **Safe Re-generation**: The plugin reads your design templates in a read-only fashion (using JSON layouts stored in the database) and only updates the output HTML wrappers. Your database files and design structures are completely safe.
 * **Real-time Logging**: Displays a detailed progress bar and status feed in your admin area to show successful compilations or skipped layout assets.
@@ -31,6 +31,8 @@ This plugin does not include license checks, trials, paid feature locks, usage q
 This plugin requires the Brizy Builder plugin to be installed and active. It does not send data to any external service directly and does not make its own remote API requests.
 
 When you run the recompilation tool, this plugin calls Brizy Builder's local WordPress classes to recompile Brizy-enabled pages. Brizy Builder may use its own compiler URLs or download URLs as part of its normal compilation process. Any data handling, remote requests, terms, and privacy details for that process are controlled by Brizy Builder.
+
+When you run the missing media scan, the plugin may request the current site's own public page URL to inspect rendered Brizy markup. This same-site request is used only to detect missing media references that Brizy beta may generate at render time.
 
 Brizy Builder terms: https://www.brizy.io/terms
 Brizy Builder privacy policy: https://www.brizy.io/privacy-policy
@@ -74,6 +76,14 @@ Once the recompilation process is complete and you have verified that your layou
 
 == Changelog ==
 
+= 1.4.2 =
+* Improved Missing Brizy Media Scan so it can detect media references generated in rendered Brizy beta output.
+* Fixed cases where the media scan reported no missing files even though the front end showed broken Brizy images.
+
+= 1.4.1 =
+* Added compatibility handling for Brizy and Brizy Pro asset URLs on subdirectory WordPress installs.
+* Fixed an issue where Brizy beta could load front-end CSS and JavaScript from duplicated paths, causing pages to appear unstyled.
+
 = 1.4.0 =
 * Adds a missing Brizy media scanner with a clear report of missing local files, source links, and affected pages.
 * Adds yellow placeholder creation for missing upload paths without overwriting existing files or changing database content.
@@ -82,6 +92,12 @@ Once the recompilation process is complete and you have verified that your layou
 * Enqueues JavaScript externally and maps internal hex UID titles to clear descriptions.
 
 == Upgrade Notice ==
+
+= 1.4.2 =
+Improves missing media detection for Brizy beta rendered output.
+
+= 1.4.1 =
+Fixes Brizy and Brizy Pro front-end asset URLs on subdirectory installs.
 
 = 1.4.0 =
 Adds missing Brizy media scanning and safe yellow placeholder creation before recompilation.
