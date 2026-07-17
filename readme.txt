@@ -52,11 +52,12 @@ For highly complex websites, we recommend temporarily disabling non-essential th
 
 == Installation ==
 
-1. Upload the `layout-recompiler-for-brizy` folder to your `/wp-content/plugins/` directory.
-2. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
-3. Navigate to **Tools > Layout Recompiler** in your WordPress Admin Sidebar.
-4. Optional: click **Scan Missing Brizy Media** to check for missing upload files, create yellow or blank placeholders, or remove yellow placeholders created by this tool.
-5. Click **Start Recompilation** and let the queue progress to 100%.
+1. Make sure the extracted plugin folder is named `layout-recompiler-for-brizy`. If you downloaded GitHub's automatic source archive, rename its `brizy-fix-main` folder before uploading it.
+2. Upload the `layout-recompiler-for-brizy` folder to your `/wp-content/plugins/` directory.
+3. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
+4. Navigate to **Tools > Layout Recompiler** in your WordPress Admin Sidebar.
+5. Optional: click **Scan Missing Brizy Media** to check for missing upload files, create yellow or blank placeholders, or remove yellow placeholders created by this tool.
+6. Click **Start Recompilation** and let the queue progress to 100%.
 
 You can watch the screencast here: https://youtu.be/aOkBbAWAcWI
 
