@@ -5,7 +5,7 @@ Tags: builder, layout, fix, migration, tools
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.2
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -71,6 +71,9 @@ Once the recompilation process is complete and you have verified that your layou
 
 == Changelog ==
 
+= 1.5.1 =
+* Added a non-intrusive invitation on the plugin's own Tools page to leave an honest WordPress.org review.
+
 = 1.5.0 =
 * Removed the missing-media scan and placeholder-repair tools so this plugin focuses exclusively on layout recompilation.
 * Retained the existing page-by-page AJAX recompilation workflow and Brizy asset URL compatibility handling.
@@ -101,6 +104,9 @@ Once the recompilation process is complete and you have verified that your layou
 * Enqueues JavaScript externally and maps internal hex UID titles to clear descriptions.
 
 == Upgrade Notice ==
+
+= 1.5.1 =
+Adds an optional WordPress.org review link on the plugin's Tools page.
 
 = 1.5.0 =
 Removes the media scan and placeholder tools; layout recompilation behavior is unchanged.
