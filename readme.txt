@@ -5,7 +5,7 @@ Tags: builder, layout, fix, migration, tools
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.2
-Stable tag: 1.4.4
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,8 +21,6 @@ This plugin does not include license checks, trials, paid feature locks, usage q
 
 === Key Features ===
 * **AJAX-Based Execution**: Runs incrementally, compiling one page at a time. This keeps memory usage low and prevents common "500 Internal Server Error" or execution timeouts on low-memory servers (below 256MB).
-* **Missing Brizy Media Scan**: Checks Brizy pages one at a time for missing upload files, including rendered Brizy beta output, then shows the exact local paths, source links, and affected pages.
-* **Missing Media Placeholders**: Creates yellow or blank placeholder files only when the expected upload file is missing, and can remove yellow placeholders created by this tool if you no longer want them. It never overwrites real media files and does not change database content.
 * **Safe Re-generation**: The plugin reads your design templates in a read-only fashion (using JSON layouts stored in the database) and only updates the output HTML wrappers. Your database files and design structures are completely safe.
 * **Real-time Logging**: Displays a detailed progress bar and status feed in your admin area to show successful compilations or skipped layout assets.
 
@@ -31,8 +29,6 @@ This plugin does not include license checks, trials, paid feature locks, usage q
 This plugin requires the Brizy Builder plugin to be installed and active. It does not send data to any external service directly and does not make its own remote API requests.
 
 When you run the recompilation tool, this plugin calls Brizy Builder's local WordPress classes to recompile Brizy-enabled pages. Brizy Builder may use its own compiler URLs or download URLs as part of its normal compilation process. Any data handling, remote requests, terms, and privacy details for that process are controlled by Brizy Builder.
-
-When you run the missing media scan, the plugin may request the current site's own public page URL to inspect rendered Brizy markup. This same-site request is used only to detect missing media references that Brizy beta may generate at render time.
 
 Brizy Builder terms: https://www.brizy.io/terms
 Brizy Builder privacy policy: https://www.brizy.io/privacy-policy
@@ -56,8 +52,7 @@ For highly complex websites, we recommend temporarily disabling non-essential th
 2. Upload the `layout-recompiler-for-brizy` folder to your `/wp-content/plugins/` directory.
 3. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
 4. Navigate to **Tools > Layout Recompiler** in your WordPress Admin Sidebar.
-5. Optional: click **Scan Missing Brizy Media** to check for missing upload files, create yellow or blank placeholders, or remove yellow placeholders created by this tool.
-6. Click **Start Recompilation** and let the queue progress to 100%.
+5. Click **Start Recompilation** and let the queue progress to 100%.
 
 You can watch the screencast here: https://youtu.be/aOkBbAWAcWI
 
@@ -72,10 +67,13 @@ Once the recompilation process is complete and you have verified that your layou
 == Screenshots ==
 
 1. Layout Recompiler appears under the WordPress Tools menu.
-2. The media scan report shows missing file paths, source links, and affected pages.
-3. The recompilation screen shows the start button, progress bar, and live process log.
+2. The recompilation screen shows the start button, progress bar, and live process log.
 
 == Changelog ==
+
+= 1.5.0 =
+* Removed the missing-media scan and placeholder-repair tools so this plugin focuses exclusively on layout recompilation.
+* Retained the existing page-by-page AJAX recompilation workflow and Brizy asset URL compatibility handling.
 
 = 1.4.4 =
 * Added blank placeholder creation for missing Brizy media when yellow fallback blocks are not desired.
@@ -103,6 +101,9 @@ Once the recompilation process is complete and you have verified that your layou
 * Enqueues JavaScript externally and maps internal hex UID titles to clear descriptions.
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+Removes the media scan and placeholder tools; layout recompilation behavior is unchanged.
 
 = 1.4.4 =
 Adds blank placeholders for missing media and background-image sections when yellow placeholders are not desired.
