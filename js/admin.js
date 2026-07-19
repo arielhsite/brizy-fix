@@ -13,6 +13,7 @@ jQuery(document).ready(function($) {
 		// Show progress section and clear log.
 		$('#brizy-fix-progress-section').show();
 		$('#brizy-fix-log').empty();
+		$('#brizy-fix-review-invitation').hide();
 		$('#brizy-fix-progress-title').text(brizyFixData.messages.fetching);
 		
 		// Step 1: Get posts.
@@ -48,6 +49,7 @@ jQuery(document).ready(function($) {
 			// Done!
 			$('#brizy-fix-progress-title').text(brizyFixData.messages.complete);
 			logMessage(brizyFixData.messages.finished, 'success');
+			$('#brizy-fix-review-invitation').show();
 			resetBtn();
 			return;
 		}

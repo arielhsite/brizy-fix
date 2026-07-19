@@ -5,7 +5,7 @@ Tags: builder, layout, fix, migration, tools
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.2
-Stable tag: 1.5.1
+Stable tag: 1.5.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -71,6 +71,10 @@ Once the recompilation process is complete and you have verified that your layou
 
 == Changelog ==
 
+= 1.5.2 =
+* Shows the optional review invitation only after the recompilation queue completes.
+* Improves the review invitation spacing and emphasizes the plugin name.
+
 = 1.5.1 =
 * Added a non-intrusive invitation on the plugin's own Tools page to leave an honest WordPress.org review.
 
@@ -104,6 +108,9 @@ Once the recompilation process is complete and you have verified that your layou
 * Enqueues JavaScript externally and maps internal hex UID titles to clear descriptions.
 
 == Upgrade Notice ==
+
+= 1.5.2 =
+Shows the optional review invitation after recompilation completes.
 
 = 1.5.1 =
 Adds an optional WordPress.org review link on the plugin's Tools page.

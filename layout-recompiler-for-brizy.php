@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Layout Recompiler for Brizy
  * Description: Recompiles all Brizy-enabled pages to fix broken layouts. Runs page-by-page using AJAX to prevent memory exhaustion and timeouts.
- * Version:     1.5.1
+ * Version:     1.5.2
  * Author:      just another tech
  * Author URI:  https://justanothertech.online
  * License:     GPL2
@@ -84,10 +84,14 @@ class Brizy_Fix {
 			}
 			.brizy-fix-log-item.success { color: green; }
 			.brizy-fix-log-item.error { color: red; }
+			#brizy-fix-review-invitation {
+				display: none;
+				padding-top: 50px;
+			}
 		' );
 
 		// Enqueue the external JS file and localize data.
-		wp_enqueue_script( 'brizy-fix-admin', plugins_url( 'js/admin.js', __FILE__ ), array( 'jquery' ), '1.5.1', true );
+		wp_enqueue_script( 'brizy-fix-admin', plugins_url( 'js/admin.js', __FILE__ ), array( 'jquery' ), '1.5.2', true );
 		wp_localize_script( 'brizy-fix-admin', 'brizyFixData', array(
 			'ajaxurl'  => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'brizy_fix_nonce' ),
@@ -141,10 +145,6 @@ class Brizy_Fix {
 				<button id="brizy-fix-start-btn" class="button button-primary">
 					<?php esc_html_e( 'Start Recompilation', 'layout-recompiler-for-brizy' ); ?>
 				</button>
-				<p class="description">
-					<?php esc_html_e( 'If Layout Recompiler for Brizy helped you, please consider sharing an honest review on WordPress.org.', 'layout-recompiler-for-brizy' ); ?>
-					<a href="<?php echo esc_url( 'https://wordpress.org/support/plugin/layout-recompiler-for-brizy/reviews/#new-post' ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Leave a review', 'layout-recompiler-for-brizy' ); ?></a>
-				</p>
 			</div>
 
 			<div class="brizy-fix-progress-container" id="brizy-fix-progress-section">
@@ -156,6 +156,15 @@ class Brizy_Fix {
 
 				<h4><?php esc_html_e( 'Process Log', 'layout-recompiler-for-brizy' ); ?></h4>
 				<div class="brizy-fix-log" id="brizy-fix-log"></div>
+			</div>
+
+			<div id="brizy-fix-review-invitation">
+				<p class="description">
+					<?php esc_html_e( 'If', 'layout-recompiler-for-brizy' ); ?>
+					<strong><?php esc_html_e( 'Layout Recompiler for Brizy', 'layout-recompiler-for-brizy' ); ?></strong>
+					<?php esc_html_e( 'helped you, please consider sharing an honest review on WordPress.org.', 'layout-recompiler-for-brizy' ); ?>
+					<a href="<?php echo esc_url( 'https://wordpress.org/support/plugin/layout-recompiler-for-brizy/reviews/#new-post' ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Leave a review', 'layout-recompiler-for-brizy' ); ?></a>
+				</p>
 			</div>
 		</div>
 		<?php
