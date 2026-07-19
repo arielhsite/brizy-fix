@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Layout Recompiler for Brizy
  * Description: Recompiles all Brizy-enabled pages to fix broken layouts. Runs page-by-page using AJAX to prevent memory exhaustion and timeouts.
- * Version:     1.5.2
+ * Version:     1.5.3
  * Author:      just another tech
  * Author URI:  https://justanothertech.online
  * License:     GPL2
@@ -91,7 +91,7 @@ class Brizy_Fix {
 		' );
 
 		// Enqueue the external JS file and localize data.
-		wp_enqueue_script( 'brizy-fix-admin', plugins_url( 'js/admin.js', __FILE__ ), array( 'jquery' ), '1.5.2', true );
+		wp_enqueue_script( 'brizy-fix-admin', plugins_url( 'js/admin.js', __FILE__ ), array( 'jquery' ), '1.5.3', true );
 		wp_localize_script( 'brizy-fix-admin', 'brizyFixData', array(
 			'ajaxurl'  => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'brizy_fix_nonce' ),

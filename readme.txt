@@ -5,7 +5,7 @@ Tags: builder, layout, fix, migration, tools
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.2
-Stable tag: 1.5.2
+Stable tag: 1.5.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -48,8 +48,8 @@ For highly complex websites, we recommend temporarily disabling non-essential th
 
 == Installation ==
 
-1. Make sure the extracted plugin folder is named `layout-recompiler-for-brizy`. If you downloaded GitHub's automatic source archive, rename its `brizy-fix-main` folder before uploading it.
-2. Upload the `layout-recompiler-for-brizy` folder to your `/wp-content/plugins/` directory.
+1. Download the installable `layout-recompiler-for-brizy.zip` release package. Do not install GitHub's automatic Source code archive because its generated folder name does not match the plugin slug.
+2. Upload the installable ZIP through **Plugins > Add New > Upload Plugin**, or extract and upload its `layout-recompiler-for-brizy` folder to `/wp-content/plugins/`.
 3. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
 4. Navigate to **Tools > Layout Recompiler** in your WordPress Admin Sidebar.
 5. Click **Start Recompilation** and let the queue progress to 100%.
@@ -70,6 +70,10 @@ Once the recompilation process is complete and you have verified that your layou
 2. The recompilation screen shows the start button, progress bar, and live process log.
 
 == Changelog ==
+
+= 1.5.3 =
+* Adds a correctly packaged GitHub release ZIP whose root directory matches the plugin slug and text domain.
+* Clarifies that GitHub's automatic source archive is not an installable plugin package.
 
 = 1.5.2 =
 * Shows the optional review invitation only after the recompilation queue completes.
@@ -108,6 +112,9 @@ Once the recompilation process is complete and you have verified that your layou
 * Enqueues JavaScript externally and maps internal hex UID titles to clear descriptions.
 
 == Upgrade Notice ==
+
+= 1.5.3 =
+Use the installable release ZIP to preserve the canonical plugin folder and text domain.
 
 = 1.5.2 =
 Shows the optional review invitation after recompilation completes.

@@ -64,9 +64,9 @@ For highly complex websites, we recommend temporarily disabling non-essential th
 
 ## Installation & Usage
 
-1. Download the plugin zip archive.
-2. Make sure the extracted plugin folder is named `layout-recompiler-for-brizy`. If you downloaded GitHub's automatic source archive, rename its `brizy-fix-main` folder before uploading it.
-3. Upload the `layout-recompiler-for-brizy` folder to your `/wp-content/plugins/` directory.
+1. Download the installable [`layout-recompiler-for-brizy.zip`](https://github.com/arielhsite/brizy-fix/releases/latest/download/layout-recompiler-for-brizy.zip) release package. Do not install GitHub's automatic **Source code** archive because its generated folder name does not match the plugin slug.
+2. In WordPress, navigate to **Plugins > Add New > Upload Plugin**, select the downloaded ZIP, and install it.
+3. Alternatively, extract the ZIP and upload its `layout-recompiler-for-brizy` folder to your `/wp-content/plugins/` directory.
 4. Activate **Layout Recompiler for Brizy** from your WordPress Plugins menu.
 5. Navigate to **Tools > Layout Recompiler** in your WordPress Admin Sidebar.
 6. Click **Start Recompilation** and let the queue progress to 100%.

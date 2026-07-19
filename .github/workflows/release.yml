@@ -1,0 +1,29 @@
+name: Build installable plugin release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build installable ZIP
+        run: |
+          mkdir -p dist/layout-recompiler-for-brizy/js
+          cp layout-recompiler-for-brizy.php LICENSE README.md readme.txt dist/layout-recompiler-for-brizy/
+          cp js/admin.js dist/layout-recompiler-for-brizy/js/
+          cd dist
+          zip -r layout-recompiler-for-brizy.zip layout-recompiler-for-brizy
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" dist/layout-recompiler-for-brizy.zip --generate-notes --verify-tag
